@@ -14,7 +14,8 @@ const CATEGORIES_PRESETS = [
   "Home & Living",
   "Beauty",
   "Lifestyle",
-  "Fashion"
+  "Fashion",
+  "Digital Art"
 ];
 
 const PRESET_IMAGES = [
@@ -54,10 +55,20 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [prodCategory, setProdCategory] = useState("Electronics");
   const [prodPrice, setProdPrice] = useState("");
   const [prodDesc, setProdDesc] = useState("");
-  const [prodImage, setProdImage] = useState(PRESET_IMAGES[0].url);
+  const [prodImage, setProdImage] = useState(PRESET_IMAGES[2].url); // Prefer high-tech image by default
   const [prodTag, setProdTag] = useState("Merchant Spec");
+  const [prodIsDigital, setProdIsDigital] = useState(false);
+  const [prodIsPremium, setProdIsPremium] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Auto detect digital format if Digital Art selected
+  useEffect(() => {
+    if (prodCategory === "Digital Art") {
+      setProdIsDigital(true);
+      setProdTag("Art Canvas");
+    }
+  }, [prodCategory]);
 
   const [merchantProducts, setMerchantProducts] = useState<Product[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -263,6 +274,8 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
     if (!prodName || !prodPrice || !merchant) return;
 
     setIsAddingProduct(true);
+    // Custom premium handling for digital products
+    const finalTag = prodIsPremium ? "Premium Art" : (prodIsDigital ? "Digital Asset" : prodTag);
     try {
       const res = await fetch("/api/merchant/product", {
         method: "POST",
@@ -271,10 +284,12 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
           name: prodName,
           category: prodCategory,
           price: parseFloat(prodPrice),
-          description: prodDesc || "High-tech premium product offered by our customized merchant brand.",
+          description: prodDesc || (prodIsDigital ? "Exclusive High-Fidelity premium digital art collectible. Authenticated artist signature & secure cloud node download." : "High-tech premium product offered by our customized merchant brand."),
           image: prodImage,
           merchantBrand: merchant.brandName,
-          merchantEmail: merchant.email
+          merchantEmail: merchant.email,
+          isDigital: prodIsDigital,
+          tag: finalTag
         })
       });
 
@@ -284,6 +299,8 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
         setProdPrice("");
         setProdDesc("");
         setProdTag("Merchant Spec");
+        setProdIsDigital(false);
+        setProdIsPremium(false);
         
         // Refresh products and trigger callback
         onProductAdded();
@@ -661,6 +678,46 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                     onChange={(e) => setProdDesc(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-lg bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-xs focus:outline-none transition-all duration-150"
                   />
+                </div>
+
+                {/* Digital / Premium Settings */}
+                <div className="p-3.5 bg-slate-950/60 rounded-xl border border-white/[0.04] space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-200">Digital Product format</span>
+                      <span className="text-[10px] text-gray-500 font-mono">Instant delivery via client secure terminal</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={prodIsDigital}
+                        onChange={(e) => setProdIsDigital(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                  </div>
+
+                  {prodIsDigital && (
+                    <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.04]">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-semibold text-purple-300 flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                          Mark as Premium Art
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-mono">Apply rare premium metadata styling</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={prodIsPremium}
+                          onChange={(e) => setProdIsPremium(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                      </label>
+                    </div>
+                  )}
                 </div>
 
                 {/* Preset Image Chooser */}

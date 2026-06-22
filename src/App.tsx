@@ -358,7 +358,7 @@ export default function App() {
   };
 
   // Safe category filter matching list matches
-  const categoriesList = ["All", "Electronics", "Sports", "Home & Living", "Beauty", "Fashion"];
+  const categoriesList = ["All", "Electronics", "Sports", "Home & Living", "Beauty", "Fashion", "Digital Art"];
 
   // Perform search and filter calculations
   const filteredProducts = useMemo(() => {

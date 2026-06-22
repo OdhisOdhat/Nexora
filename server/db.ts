@@ -211,6 +211,9 @@ class DatabaseManager {
         await client.query(`
           ALTER TABLE products ADD COLUMN IF NOT EXISTS merchant_email VARCHAR(255);
         `);
+        await client.query(`
+          ALTER TABLE products ADD COLUMN IF NOT EXISTS is_digital BOOLEAN DEFAULT FALSE;
+        `);
 
         // Create merchants table
         await client.query(`
@@ -393,7 +396,8 @@ class DatabaseManager {
           isFeatured: row.is_featured,
           isTrending: row.is_trending,
           merchantBrand: row.merchant_brand || undefined,
-          merchantEmail: row.merchant_email || undefined
+          merchantEmail: row.merchant_email || undefined,
+          isDigital: !!row.is_digital
         }));
       } catch (err) {
         console.error("PG query products failed, using memory default", err);
@@ -882,14 +886,16 @@ class DatabaseManager {
     description: string,
     image: string,
     merchantBrand: string,
-    merchantEmail: string
+    merchantEmail: string,
+    isDigital: boolean = false,
+    tag: string = "Merchant Spec"
   ) {
     if (this.isPostgresActive && this.pool) {
       try {
         await this.pool.query(
-          `INSERT INTO products (id, name, category, price, description, image, rating, rating_count, merchant_brand, merchant_email)
-           VALUES ($1, $2, $3, $4, $5, $6, 4.5, 1, $7, $8)`,
-          [id, name, category, price, description, image, merchantBrand, merchantEmail]
+          `INSERT INTO products (id, name, category, price, description, image, rating, rating_count, merchant_brand, merchant_email, is_digital, tag)
+           VALUES ($1, $2, $3, $4, $5, $6, 4.5, 1, $7, $8, $9, $10)`,
+          [id, name, category, price, description, image, merchantBrand, merchantEmail, isDigital, tag]
         );
         return { success: true };
       } catch (err) {
@@ -909,7 +915,9 @@ class DatabaseManager {
       description,
       image,
       merchantBrand,
-      merchantEmail
+      merchantEmail,
+      isDigital,
+      tag
     };
 
     this.localDb.products.unshift(newProduct);

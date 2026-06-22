@@ -24,16 +24,31 @@ export default function ProductCard({
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
     : 0;
 
+  const isPremiumArt = !!product.isDigital && (
+    product.category === "Digital Art" || 
+    product.tag?.toLowerCase().includes("premium") || 
+    product.tag?.toLowerCase().includes("art") || 
+    product.tag?.toLowerCase().includes("rare")
+  );
+
   return (
     <div 
       id={`product-card-${product.id}`}
-      className="group relative flex flex-col justify-between bg-nexora-surface rounded-2xl border border-white/[0.04] p-4 transition-all duration-300 hover:border-nexora-primary/40 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-nexora-primary/5 select-none"
+      className={`group relative flex flex-col justify-between bg-nexora-surface rounded-2xl border p-4 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl select-none ${
+        isPremiumArt 
+          ? "border-amber-500/20 shadow-lg shadow-amber-500/[0.01] hover:border-amber-500/60 hover:shadow-amber-500/10" 
+          : "border-white/[0.04] hover:border-nexora-primary/40 hover:shadow-nexora-primary/5"
+      }`}
     >
       {/* Absolute top badge indicators */}
       <div className="absolute top-6 left-6 z-10 flex flex-col gap-1.5 items-start">
         {product.tag && (
-          <span className="px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest bg-nexora-primary text-white rounded-lg shadow-lg uppercase shadow-nexora-primary/15">
-            {product.tag}
+          <span className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest rounded-lg shadow-lg uppercase ${
+            isPremiumArt 
+              ? "bg-amber-500 text-slate-950 font-extrabold shadow-amber-500/20 flex items-center gap-1" 
+              : "bg-nexora-primary text-white shadow-nexora-primary/15"
+          }`}>
+            {isPremiumArt && "✨"} {product.tag}
           </span>
         )}
         {discountRate > 0 && (
@@ -55,7 +70,9 @@ export default function ProductCard({
       {/* Product graphics image card wrapper */}
       <div 
         onClick={() => onSelectProduct(product)}
-        className="relative aspect-square w-full rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center cursor-pointer mb-4 group-hover:scale-[1.02] transition-all"
+        className={`relative aspect-square w-full rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center cursor-pointer mb-4 group-hover:scale-[1.02] transition-all border ${
+          isPremiumArt ? "border-amber-500/10 group-hover:border-amber-500/30" : "border-transparent"
+        }`}
       >
         <img
           referrerPolicy="no-referrer"
@@ -80,9 +97,16 @@ export default function ProductCard({
       <div className="flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-nexora-primary uppercase">
-              {product.category}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-nexora-primary uppercase">
+                {product.category}
+              </span>
+              {product.isDigital && (
+                <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-extrabold tracking-tight uppercase border border-amber-500/15">
+                  Digital Asset
+                </span>
+              )}
+            </div>
             {product.merchantBrand && (
               <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold max-w-[124px] truncate" title={`Sold by ${product.merchantBrand}`}>
                 ⚡ {product.merchantBrand}

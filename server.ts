@@ -306,7 +306,7 @@ app.post("/api/admin/update-delivery", async (req, res) => {
 // API Endpoint: Add a product from a merchant (ware)
 app.post("/api/merchant/product", async (req, res) => {
   try {
-    const { name, category, price, description, image, merchantBrand, merchantEmail } = req.body;
+    const { name, category, price, description, image, merchantBrand, merchantEmail, isDigital, tag } = req.body;
     if (!name || !category || !price || !merchantBrand || !merchantEmail) {
       res.status(400).json({ error: "Required product fields are missing." });
       return;
@@ -320,7 +320,9 @@ app.post("/api/merchant/product", async (req, res) => {
       description || "A pristine premium ware provided by our partner merchant.",
       image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800",
       merchantBrand,
-      merchantEmail
+      merchantEmail,
+      !!isDigital,
+      tag || "Merchant Spec"
     );
     res.json(result);
   } catch (err: any) {

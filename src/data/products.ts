@@ -13,6 +13,7 @@ export interface Product {
   isTrending?: boolean;
   merchantBrand?: string;
   merchantEmail?: string;
+  isDigital?: boolean;
 }
 
 export const PRODUCTS: Product[] = [
@@ -154,5 +155,31 @@ export const PRODUCTS: Product[] = [
     ratingCount: 30,
     description: "Futuristic multi-layered ceramic thermal cookware set optimized for advanced high-efficiency induction and smart stove elements.",
     image: "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: "art-cyber-mural",
+    name: "Neo-Genesis Cyber Mural",
+    category: "Digital Art",
+    price: 450.00,
+    rating: 4.9,
+    ratingCount: 24,
+    description: "A high-fidelity ultra-HD interactive digital mural displaying procedural atmospheric glow, neural node connections, and live state reactive canvas updates.",
+    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800",
+    tag: "Premium Art",
+    isFeatured: true,
+    isDigital: true
+  },
+  {
+    id: "art-quantum-structure",
+    name: "Exo-Spire Holographic Render",
+    category: "Digital Art",
+    price: 250.00,
+    rating: 4.8,
+    ratingCount: 18,
+    description: "Scarce authenticated digital render showcasing holographic quantum-architectural geometry. Includes ultra-high resolution digital file formats and exclusive cryptographic certificate of authenticity.",
+    image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=800",
+    tag: "Rare Premium",
+    isTrending: true,
+    isDigital: true
   }
 ];

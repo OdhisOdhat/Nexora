@@ -1,4 +1,4 @@
-import { X, Star, Heart, ShoppingBag, ShieldCheck, Truck, RefreshCw } from "lucide-react";
+import { X, Star, Heart, ShoppingBag, ShieldCheck, Truck, RefreshCw, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product } from "../data/products";
 
@@ -134,15 +134,23 @@ export default function ProductDetailModal({
                   <div className="mt-6 space-y-2 text-xs">
                     <div className="flex py-2 border-b border-white/[0.04]">
                       <span className="text-gray-500 font-mono w-28 shrink-0">Carrier:</span>
-                      <span className="text-gray-300">Free / Works globally</span>
+                      <span className="text-gray-300">
+                        {product.isDigital ? "Instant Cloud Node / Download Link (Courier Free)" : "Free / Works globally"}
+                      </span>
                     </div>
                     <div className="flex py-2 border-b border-white/[0.04]">
                       <span className="text-gray-500 font-mono w-28 shrink-0">Model Code:</span>
-                      <span className="text-gray-300 font-mono">NX-{product.id.toUpperCase()}</span>
+                      <span className="text-gray-300 font-mono">
+                        {product.isDigital ? `ART-${product.id.toUpperCase()}` : `NX-${product.id.toUpperCase()}`}
+                      </span>
                     </div>
                     <div className="flex py-2">
-                      <span className="text-gray-500 font-mono w-28 shrink-0">Warranty:</span>
-                      <span className="text-gray-300">3-Yr Limited warranty</span>
+                      <span className="text-gray-500 font-mono w-28 shrink-0">
+                        {product.isDigital ? "Licensing:" : "Warranty:"}
+                      </span>
+                      <span className="text-gray-300">
+                        {product.isDigital ? "Personal scarce license & certified auth record" : "3-Yr Limited warranty"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -155,8 +163,17 @@ export default function ProductDetailModal({
                       <span>Certified Nexora Authentic with Secure Payments</span>
                     </div>
                     <div className="flex items-center gap-2.5 text-xs text-gray-400">
-                      <Truck className="w-4 h-4 text-purple-400" />
-                      <span>Free Standard Delivery on order and priority dispatcher processing</span>
+                      {product.isDigital ? (
+                        <>
+                          <Zap className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
+                          <span>Instant Digital Beam: Download links provisioned on payment</span>
+                        </>
+                      ) : (
+                        <>
+                          <Truck className="w-4 h-4 text-purple-400" />
+                          <span>Free Standard Delivery on order and priority dispatcher processing</span>
+                        </>
+                      )}
                     </div>
                   </div>
 
