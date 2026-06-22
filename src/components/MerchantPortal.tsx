@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight } from "lucide-react";
+import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight, Edit2, X } from "lucide-react";
 import { motion } from "motion/react";
 import { Product } from "../data/products";
 
@@ -60,6 +60,46 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [successMsg, setSuccessMsg] = useState("");
 
   const [merchantProducts, setMerchantProducts] = useState<Product[]>([]);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editPriceValue, setEditPriceValue] = useState<string>("");
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
+
+  const handleUpdatePrice = async (productId: string) => {
+    if (!editPriceValue || isNaN(parseFloat(editPriceValue))) return;
+    setIsUpdatingPrice(true);
+    try {
+      const res = await fetch("/api/merchant/product/update-price", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: productId,
+          price: parseFloat(editPriceValue),
+          email: userEmail
+        })
+      });
+
+      if (res.ok) {
+        setSuccessMsg("Product price updated successfully!");
+        setEditingProductId(null);
+        setEditPriceValue("");
+        // Trigger parent state update
+        onProductAdded();
+        
+        // Refresh products list
+        const prodRes = await fetch("/api/products");
+        if (prodRes.ok) {
+          const allProds: Product[] = await prodRes.json();
+          const filtered = allProds.filter(p => p.merchantEmail === userEmail);
+          setMerchantProducts(filtered);
+        }
+        setTimeout(() => setSuccessMsg(""), 4000);
+      }
+    } catch (err) {
+      console.error("Failed to update product price:", err);
+    } finally {
+      setIsUpdatingPrice(false);
+    }
+  };
 
   // Fetch current merchant info and filtered products
   const fetchMerchantAndProducts = async () => {
@@ -722,9 +762,57 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                         </div>
                       </div>
 
-                      <div className="text-right flex-shrink-0">
-                        <span className="text-xs font-mono font-bold text-white block">${p.price.toFixed(2)}</span>
-                        <span className="text-[9px] text-emerald-400/90 font-mono font-semibold block uppercase tracking-wider mt-0.5">Listed</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {editingProductId === p.id ? (
+                          <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-white/[0.08]">
+                            <span className="text-gray-400 font-mono text-xs">$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editPriceValue}
+                              onChange={(e) => setEditPriceValue(e.target.value)}
+                              className="w-16 bg-transparent text-white text-xs font-mono font-bold focus:outline-none"
+                              placeholder="0.00"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleUpdatePrice(p.id);
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePrice(p.id)}
+                              className="p-1 bg-purple-600 hover:bg-purple-500 rounded text-white cursor-pointer"
+                              title="Save Price"
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingProductId(null)}
+                              className="p-1 bg-slate-850 hover:bg-slate-700/80 rounded text-gray-400 cursor-pointer"
+                              title="Cancel"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2.5">
+                            <div className="text-right">
+                              <span className="text-xs font-mono font-bold text-white block">${p.price.toFixed(2)}</span>
+                              <span className="text-[9px] text-emerald-400/90 font-mono font-semibold block uppercase tracking-wider mt-0.5">Listed</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingProductId(p.id);
+                                setEditPriceValue(p.price.toString());
+                              }}
+                              className="p-1.5 bg-white/[0.03] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded-lg border border-white/[0.04] transition-all cursor-pointer"
+                              title="Set Item Price"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

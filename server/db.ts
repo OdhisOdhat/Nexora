@@ -894,6 +894,29 @@ class DatabaseManager {
     return { success: true };
   }
 
+  public async updateProductPrice(id: string, price: number, merchantEmail: string) {
+    if (this.isPostgresActive && this.pool) {
+      try {
+        const result = await this.pool.query(
+          `UPDATE products SET price = $1 WHERE id = $2 AND merchant_email = $3`,
+          [price, id, merchantEmail]
+        );
+        return { success: (result.rowCount ? result.rowCount > 0 : false) };
+      } catch (err) {
+        console.error("PG update product price failed", err);
+        throw err;
+      }
+    }
+
+    const matchIdx = this.localDb.products.findIndex(p => p.id === id && p.merchantEmail === merchantEmail);
+    if (matchIdx !== -1) {
+      this.localDb.products[matchIdx].price = price;
+      this.saveLocalData();
+      return { success: true };
+    }
+    return { success: false, error: "Product not located, or unauthorized." };
+  }
+
   public async getAdminOverview() {
     let rawMerchants: any[] = [];
     let rawOrders: any[] = [];

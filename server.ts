@@ -328,6 +328,21 @@ app.post("/api/merchant/product", async (req, res) => {
   }
 });
 
+// API Endpoint: Update merchant product price
+app.post("/api/merchant/product/update-price", async (req, res) => {
+  try {
+    const { id, price, email } = req.body;
+    if (!id || price === undefined || !email) {
+      res.status(400).json({ error: "Missing required properties." });
+      return;
+    }
+    const result = await db.updateProductPrice(id, parseFloat(price), email);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to update product price.", details: err.message });
+  }
+});
+
 // API Endpoint: Retrieve chats histories
 app.get("/api/chats", async (req, res) => {
   try {
