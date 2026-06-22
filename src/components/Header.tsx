@@ -1,0 +1,154 @@
+import { 
+  Search, 
+  Bell, 
+  Heart, 
+  ShoppingBag, 
+  Menu, 
+  User,
+  Sun,
+  Moon
+} from "lucide-react";
+import { motion } from "motion/react";
+
+interface HeaderProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  cartCount: number;
+  wishlistCount: number;
+  onOpenCart: () => void;
+  onOpenWishlist: () => void;
+  onToggleMobileSidebar: () => void;
+  userEmail: string;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
+}
+
+export default function Header({
+  searchQuery,
+  onSearchChange,
+  cartCount,
+  wishlistCount,
+  onOpenCart,
+  onOpenWishlist,
+  onToggleMobileSidebar,
+  userEmail,
+  theme,
+  onToggleTheme
+}: HeaderProps) {
+  
+  return (
+    <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 py-4 bg-nexora-dark/85 backdrop-blur-md border-b border-white/[0.04]">
+      {/* Brand logo on mobile + Burger toggle */}
+      <div className="flex items-center gap-3">
+        <button
+          id="header-mobile-sidebar-toggle-btn"
+          aria-label="Toggle navigation menu"
+          onClick={onToggleMobileSidebar}
+          className="md:hidden p-2 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <div className="w-7 h-7 bg-nexora-primary rounded-lg flex items-center justify-center glow-primary">
+            <span className="font-bold text-white text-xs">N</span>
+          </div>
+          <span className="font-sans font-bold text-md tracking-wider text-white">NEXORA</span>
+        </div>
+      </div>
+
+      {/* Futuristic search box with scanning icon design */}
+      <div className="hidden sm:flex items-center flex-1 max-w-md mx-6 relative">
+        <span className="absolute left-4 text-gray-400">
+          <Search className="w-5 h-5" />
+        </span>
+        <input
+          id="header-search-input"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search items, categories, collections..."
+          className="w-full pl-11 pr-4 py-2.5 bg-nexora-surface text-white text-sm rounded-xl border border-white/[0.08] focus:border-nexora-primary focus:ring-1 focus:ring-nexora-primary focus:outline-none transition-all duration-200 placeholder-gray-500"
+        />
+        <div className="absolute right-3.5 px-1.5 py-0.5 rounded bg-slate-850 border border-white/[0.04] text-[10px] text-gray-500 font-mono select-none">
+          ⌘K
+        </div>
+      </div>
+
+      {/* Header Utilities bar */}
+      <div className="flex items-center gap-1.5 md:gap-3.5">
+        {/* Dynamic Light/Dark Theme Toggle */}
+        <button
+          id="header-theme-toggle-btn"
+          aria-label="Toggle visual theme"
+          onClick={onToggleTheme}
+          className="relative p-2.5 text-gray-400 hover:text-white hover:bg-slate-800/10 rounded-xl transition-all active:scale-95"
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+        >
+          {theme === "dark" ? (
+            <Sun className="w-5 h-5 text-amber-400 hover:rotate-45 transition-transform duration-300" />
+          ) : (
+            <Moon className="w-5 h-5 text-indigo-500 hover:-rotate-12 transition-transform duration-300" />
+          )}
+        </button>
+
+        {/* Simple Notification simulator */}
+        <button
+          id="header-notification-btn"
+          aria-label="Open notifications"
+          className="relative p-2.5 text-gray-400 hover:text-white hover:bg-slate-800/50 rounded-xl transition-all"
+        >
+          <Bell className="w-5 h-5" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-nexora-primary rounded-full animate-ping" />
+        </button>
+
+        {/* Wishlist triggers */}
+        <button
+          id="header-wishlist-btn"
+          aria-label="Open wishlist"
+          onClick={onOpenWishlist}
+          className="relative p-2.5 text-gray-400 hover:text-white hover:bg-slate-800/50 rounded-xl transition-all group"
+        >
+          <Heart className="w-5 h-5 group-hover:scale-110 group-hover:text-red-400 transition-colors" />
+          {wishlistCount > 0 && (
+            <motion.span
+              initial={{ scale: 0.7 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 min-w-5 h-5 bg-purple-500 text-white rounded-full flex items-center justify-center text-[10px] font-mono font-bold px-1 glow-accent border border-slate-900"
+            >
+              {wishlistCount}
+            </motion.span>
+          )}
+        </button>
+
+        {/* Shopping Cart button */}
+        <button
+          id="header-cart-btn"
+          aria-label="Open shopping cart"
+          onClick={onOpenCart}
+          className="relative flex items-center gap-2 p-2 px-3 bg-nexora-surface/60 border border-white/[0.05] hover:border-nexora-primary text-gray-200 hover:text-white rounded-xl transition-all group cursor-pointer"
+        >
+          <ShoppingBag className="w-5 h-5 text-gray-400 group-hover:text-nexora-primary group-hover:scale-105 transition-all" />
+          <span className="hidden sm:inline text-xs font-semibold">Cart</span>
+          <span className="min-w-5 h-5 bg-nexora-primary text-white rounded-full flex items-center justify-center text-[11px] font-mono font-bold px-1 glow-primary">
+            {cartCount}
+          </span>
+        </button>
+
+        {/* Divider */}
+        <div className="h-6 w-[1px] bg-white/[0.08]" />
+
+        {/* Profile Avatar / User identifier */}
+        <div className="flex items-center gap-2 group cursor-pointer">
+          <div className="w-10 h-10 rounded-xl border border-white/[0.08] group-hover:border-nexora-primary transition-all overflow-hidden bg-slate-800 flex items-center justify-center relative">
+            <User className="w-5 h-5 text-gray-300" />
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-slate-900" />
+          </div>
+          <div className="hidden lg:block text-left">
+            <p className="text-xs font-semibold text-gray-200 truncate max-w-28">Current User</p>
+            <p className="text-[10px] text-gray-400 font-mono truncate max-w-28">{userEmail || "user@nexora.io"}</p>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}

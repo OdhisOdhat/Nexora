@@ -1,0 +1,205 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-nexora-dark: var(--nexora-dark);
+  --color-nexora-surface: var(--nexora-surface);
+  --color-nexora-primary: var(--nexora-primary);
+  --color-nexora-primary-hover: var(--nexora-primary-hover);
+  --color-nexora-accent: var(--nexora-accent);
+  --color-nexora-gray-800: var(--nexora-gray-800);
+  
+  --color-slate-900: var(--slate-900);
+  --color-slate-950: var(--slate-950);
+}
+
+:root {
+  --nexora-dark: #0F1116;
+  --nexora-surface: #1A1D24;
+  --nexora-primary: #6C63FF;
+  --nexora-primary-hover: #5A52E6;
+  --nexora-accent: #9D6CFF;
+  --nexora-gray-800: #1E222B;
+  
+  --slate-900: #12151C;
+  --slate-950: #090B0F;
+  
+  --text-main: #F7F8FB;
+  --border-color: rgba(255, 255, 255, 0.05);
+}
+
+:root.light {
+  --nexora-dark: #F4F6FA;
+  --nexora-surface: #FFFFFF;
+  --nexora-primary: #5A4EFA;
+  --nexora-primary-hover: #483FD6;
+  --nexora-accent: #8A57F0;
+  --nexora-gray-800: #E5E7EB;
+  
+  --slate-900: #FAFAFA;
+  --slate-950: #FFFFFF;
+  
+  --text-main: #1F2937;
+  --border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Base resets & scrollbars helper */
+body {
+  background-color: var(--nexora-dark);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--nexora-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--nexora-surface);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nexora-primary);
+}
+
+.glow-primary {
+  box-shadow: 0 0 20px rgba(108, 99, 255, 0.18);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(157, 108, 255, 0.18);
+}
+
+.light .glow-primary {
+  box-shadow: 0 0 20px rgba(90, 78, 250, 0.12);
+}
+
+.light .glow-accent {
+  box-shadow: 0 0 20px rgba(138, 87, 240, 0.12);
+}
+
+.glass-panel {
+  background: rgba(26, 29, 36, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+}
+
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+/* Intelligent light-mode color overrides for text, badges and backgrounds to yield pristine visual styling */
+.light .text-white {
+  color: #111827 !important;
+}
+
+.light .text-gray-200 {
+  color: #1F2937 !important;
+}
+
+.light .text-gray-300 {
+  color: #374151 !important;
+}
+
+.light .text-gray-400 {
+  color: #4B5563 !important;
+}
+
+.light .text-gray-500 {
+  color: #6B7280 !important;
+}
+
+.light .border-white\/\[0\.04\],
+.light .border-white\/\[0\.05\],
+.light .border-white\/\[0\.06\],
+.light .border-white\/\[0\.08\] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Retain real white text inside buttons, colorful tags, notifications, indicators */
+.light .bg-nexora-primary .text-white,
+.light .bg-nexora-primary-hover .text-white,
+.light .bg-purple-600 .text-white,
+.light .bg-emerald-500 .text-white,
+.light .bg-red-500 .text-white,
+.light .bg-blue-600 .text-white,
+.light .bg-black/95 .text-white,
+.light .text-white-force,
+.light [class*="bg-nexora-primary"] .text-white,
+.light [class*="bg-purple-"] .text-white,
+.light [class*="bg-emerald-"] .text-white,
+.light button[class*="bg-nexora-primary"] *,
+.light button[class*="bg-purple-"] *,
+.light button[class*="bg-indigo-"] *,
+.light button[class*="bg-red-"] *,
+.light button[class*="bg-emerald-"] *,
+.light .glow-primary .text-white,
+.light .badge-primary *,
+.light .text-white-force * {
+  color: #FFFFFF !important;
+}
+
+/* Light mode specific background modifications */
+.light .bg-slate-900\/50,
+.light .bg-slate-950\/70,
+.light .bg-slate-950\/40 {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.light .bg-slate-850 {
+  background-color: #F3F4F6 !important;
+}
+
+.light .bg-slate-900\/60 {
+  background-color: #E5E7EB !important;
+}
+
+.light .text-purple-200 {
+  color: #4F46E5 !important;
+}
+
+.light .text-green-400 {
+  color: #10B981 !important;
+}
+
+.light .text-purple-300 {
+  color: #7C3AED !important;
+}
+
+.light .bg-purple-500\/10 {
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+.light .bg-green-500\/10 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Header, items and dropdown specific tweaks for light theme */
+.light header {
+  background-color: rgba(244, 246, 250, 0.85);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.light .bg-slate-950 {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light input::placeholder {
+  color: #9CA3AF !important;
+}

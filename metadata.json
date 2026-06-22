@@ -1,0 +1,6 @@
+{
+  "name": "Nexora",
+  "description": "A futuristic, intuitive, and conversion-focused e-commerce experience featuring smart AI recommendations, sleek product discovery, and interactive simulated payments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
