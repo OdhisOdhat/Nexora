@@ -14,7 +14,9 @@ import {
   X,
   Zap,
   Store,
-  Shield
+  Shield,
+  Truck,
+  LogOut
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Section } from "../types";
@@ -26,6 +28,8 @@ interface SidebarProps {
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   isPrimeUser: boolean;
+  userRole?: "customer" | "merchant" | "rider" | null;
+  onSignOut?: () => void;
 }
 
 export default function Sidebar({
@@ -34,7 +38,9 @@ export default function Sidebar({
   onOpenPrime,
   isMobileOpen,
   onCloseMobile,
-  isPrimeUser
+  isPrimeUser,
+  userRole = null,
+  onSignOut
 }: SidebarProps) {
   
   const mainNavItems = [
@@ -48,6 +54,10 @@ export default function Sidebar({
 
   const merchantNavItems = [
     { id: "merchant-portal", label: "Merchant Suite", icon: Store, badge: "Sell" }
+  ];
+
+  const riderNavItems = [
+    { id: "rider-portal", label: "Rider Logistics", icon: Truck, badge: "Drop" }
   ];
 
   const adminNavItems = [
@@ -126,30 +136,59 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Merchant Suite Partner Link */}
-        <div>
-          <h4 className="px-4 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-3">Merchant Node</h4>
-          <div className="space-y-1">
-            {merchantNavItems.map((item) => (
-              <button
-                key={item.id}
-                id={`sidebar-nav-${item.id}`}
-                onClick={() => handleNavClick(item.id as Section)}
-                className={navClass(item.id as Section)}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-105 ${currentSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-purple-400'}`} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            ))}
+        {/* Rider Suite Section Link */}
+        {userRole === "rider" && (
+          <div>
+            <h4 className="px-4 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-3">Courier Logistics</h4>
+            <div className="space-y-1">
+              {riderNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  id={`sidebar-nav-${item.id}`}
+                  onClick={() => handleNavClick(item.id as Section)}
+                  className={navClass(item.id as Section)}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-105 ${currentSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-emerald-400'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Merchant Suite Partner Link */}
+        {(!userRole || userRole === "merchant") && (
+          <div>
+            <h4 className="px-4 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-3">Merchant Node</h4>
+            <div className="space-y-1">
+              {merchantNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  id={`sidebar-nav-${item.id}`}
+                  onClick={() => handleNavClick(item.id as Section)}
+                  className={navClass(item.id as Section)}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-105 ${currentSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-purple-400'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Admin Suite Section Link */}
         <div>
@@ -197,8 +236,18 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Upgrade Callout Card */}
-      <div className="p-4 border-t border-white/[0.04]">
+      {/* Upgrade Callout Card & Active User Badge */}
+      <div className="p-4 border-t border-white/[0.04] space-y-3">
+        {userRole && onSignOut && (
+          <button
+            onClick={onSignOut}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl border border-rose-500/20 transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out Session</span>
+          </button>
+        )}
+
         {isPrimeUser ? (
           <div className="p-4 bg-gradient-to-br from-purple-900/40 to-indigo-950/40 rounded-2xl border border-purple-500/30 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-12 h-12 bg-purple-500/10 rounded-full blur-xl"></div>

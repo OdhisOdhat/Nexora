@@ -46,14 +46,59 @@ import ProfileView from "./components/ProfileView";
 import WishlistView from "./components/WishlistView";
 import OrdersView from "./components/OrdersView";
 import SettingsView from "./components/SettingsView";
+import AuthOverlay from "./components/AuthOverlay";
+import RiderPortal from "./components/RiderPortal";
 
 // User email injected from development metadata context
-const USER_EMAIL = "fodhis1@gmail.com";
+const DEFAULT_USER_EMAIL = "fodhis1@gmail.com";
 
 export default function App() {
   // Navigation Routing States
   const [currentSection, setCurrentSection] = useState<Section>("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  // Dynamic Authenticated User State
+  const [user, setUser] = useState<{
+    email: string;
+    name: string;
+    role: "customer" | "merchant" | "rider";
+    locality?: string;
+    brandName?: string;
+  } | null>(() => {
+    const stored = localStorage.getItem("nexora_auth_user");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [authOpen, setAuthOpen] = useState(false);
+  const currentUserEmail = user?.email || DEFAULT_USER_EMAIL;
+
+  const handleAuthSuccess = (authUser: any) => {
+    setUser(authUser);
+    localStorage.setItem("nexora_auth_user", JSON.stringify(authUser));
+    setAuthOpen(false);
+    notify(`Connected node successfully as ${authUser.name}!`);
+    if (authUser.role === "rider") {
+      setCurrentSection("rider-portal");
+    } else if (authUser.role === "merchant") {
+      setCurrentSection("merchant-portal");
+    } else {
+      setCurrentSection("home");
+    }
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    localStorage.removeItem("nexora_auth_user");
+    notify("Session cleared. Connection dropped.");
+    setCurrentSection("home");
+  };
   
   // Interactive Overlays
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
@@ -128,19 +173,19 @@ export default function App() {
         }
       }
 
-      const cartRes = await fetch(`/api/cart?email=${encodeURIComponent(USER_EMAIL)}`);
+      const cartRes = await fetch(`/api/cart?email=${encodeURIComponent(currentUserEmail)}`);
       if (cartRes.ok) {
         const cartItems = await cartRes.json();
         setCart(cartItems);
       }
 
-      const wishlistRes = await fetch(`/api/wishlist?email=${encodeURIComponent(USER_EMAIL)}`);
+      const wishlistRes = await fetch(`/api/wishlist?email=${encodeURIComponent(currentUserEmail)}`);
       if (wishlistRes.ok) {
         const wlList = await wishlistRes.json();
         setWishlist(wlList);
       }
 
-      const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(USER_EMAIL)}`);
+      const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(currentUserEmail)}`);
       if (ordersRes.ok) {
         const list = await ordersRes.json();
         setOrdersLog(list);
@@ -148,7 +193,7 @@ export default function App() {
     } catch (err) {
       console.error("Database initial sync failed:", err);
     }
-  }, []);
+  }, [currentUserEmail]);
 
   useEffect(() => {
     syncWithDatabase();
@@ -208,7 +253,7 @@ export default function App() {
       await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: USER_EMAIL, productId: product.id, quantity: 1 })
+        body: JSON.stringify({ email: currentUserEmail, productId: product.id, quantity: 1 })
       });
     } catch (err) {
       console.error("DB cart add operation failed:", err);
@@ -225,7 +270,7 @@ export default function App() {
       await fetch("/api/cart/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: USER_EMAIL, productId: id, quantity })
+        body: JSON.stringify({ email: currentUserEmail, productId: id, quantity })
       });
     } catch (err) {
       console.error("DB cart update operation failed:", err);
@@ -243,7 +288,7 @@ export default function App() {
       await fetch("/api/cart/remove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: USER_EMAIL, productId: id })
+        body: JSON.stringify({ email: currentUserEmail, productId: id })
       });
     } catch (err) {
       console.error("DB cart remove operation failed:", err);
@@ -256,11 +301,11 @@ export default function App() {
       await fetch("/api/cart/clear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: USER_EMAIL })
+        body: JSON.stringify({ email: currentUserEmail })
       });
 
       // Reload order list from database to register the purchase
-      const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(USER_EMAIL)}`);
+      const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(currentUserEmail)}`);
       if (ordersRes.ok) {
         const list = await ordersRes.json();
         setOrdersLog(list);
@@ -287,7 +332,7 @@ export default function App() {
       await fetch("/api/wishlist/toggle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: USER_EMAIL, productId: product.id })
+        body: JSON.stringify({ email: currentUserEmail, productId: product.id })
       });
     } catch (err) {
       console.error("DB wishlist operation failed:", err);
@@ -375,6 +420,8 @@ export default function App() {
         isMobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
         isPrimeUser={isPrimeUser}
+        userRole={user?.role}
+        onSignOut={handleSignOut}
       />
 
       {/* 2. Main content framework viewport */}
@@ -389,9 +436,11 @@ export default function App() {
           onOpenCart={() => setCartDrawerOpen(true)}
           onOpenWishlist={() => setWishlistDrawerOpen(true)}
           onToggleMobileSidebar={() => setMobileSidebarOpen(true)}
-          userEmail={USER_EMAIL}
+          userEmail={currentUserEmail}
           theme={theme}
           onToggleTheme={toggleTheme}
+          user={user}
+          onOpenAuth={() => setAuthOpen(true)}
         />
 
         {/* Fullstack SQL Database Connectivity Indicator Ribbon */}
@@ -480,10 +529,14 @@ export default function App() {
           ) : currentSection === "top-brands" ? (
             <TopBrandsView />
           ) : currentSection === "profile" ? (
-            <ProfileView 
-              userEmail={USER_EMAIL} 
-              isPrimeUser={isPrimeUser} 
-            />
+            !user ? (
+              <AuthOverlay onAuthSuccess={handleAuthSuccess} />
+            ) : (
+              <ProfileView 
+                userEmail={currentUserEmail} 
+                isPrimeUser={isPrimeUser} 
+              />
+            )
           ) : currentSection === "wishlist" ? (
             <WishlistView
               productsList={productsList}
@@ -494,23 +547,52 @@ export default function App() {
               setCurrentSection={setCurrentSection}
             />
           ) : currentSection === "orders" ? (
-            <OrdersView ordersLog={ordersLog} />
+            !user ? (
+              <AuthOverlay onAuthSuccess={handleAuthSuccess} />
+            ) : (
+              <OrdersView ordersLog={ordersLog} />
+            )
           ) : currentSection === "merchant-portal" ? (
-            <MerchantPortal 
-              userEmail={USER_EMAIL} 
-              onProductAdded={async () => {
-                const refreshedRes = await fetch("/api/products");
-                if (refreshedRes.ok) {
-                  const items = await refreshedRes.json();
-                  if (items && items.length > 0) {
-                    setProductsList(items);
+            !user || user.role !== "merchant" ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl text-center text-xs font-semibold text-purple-450">
+                  Please log in as a Merchant Node to list products & configure prices.
+                </div>
+                <AuthOverlay onAuthSuccess={handleAuthSuccess} />
+              </div>
+            ) : (
+              <MerchantPortal 
+                userEmail={currentUserEmail} 
+                onProductAdded={async () => {
+                  const refreshedRes = await fetch("/api/products");
+                  if (refreshedRes.ok) {
+                    const items = await refreshedRes.json();
+                    if (items && items.length > 0) {
+                      setProductsList(items);
+                    }
                   }
-                }
-              }} 
-            />
+                }} 
+              />
+            )
+          ) : currentSection === "rider-portal" ? (
+            !user || user.role !== "rider" ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center text-xs font-semibold text-emerald-400">
+                  Authentication Required: Connect active local Rider credentials to inspect regional logistics tasks.
+                </div>
+                <AuthOverlay onAuthSuccess={handleAuthSuccess} />
+              </div>
+            ) : (
+              <RiderPortal 
+                riderEmail={currentUserEmail} 
+                riderName={user.name} 
+                riderLocality={user.locality || "Midtown"} 
+                onProductDelivered={syncWithDatabase} 
+              />
+            )
           ) : currentSection === "settings" ? (
             <SettingsView
-              userEmail={USER_EMAIL}
+              userEmail={currentUserEmail}
               dbStatus={dbStatus}
               onRefreshStatus={syncWithDatabase}
             />
@@ -641,6 +723,38 @@ export default function App() {
         onClose={() => setPrimeOpen(false)}
         onUpgrade={handleUpgradePrimeUser}
       />
+
+      {/* Authentic Auth modal popup overlay */}
+      <AnimatePresence>
+        {authOpen && (
+          <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4">
+            <motion.div
+              id="auth-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setAuthOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              id="auth-modal"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative z-10 w-full max-w-md"
+            >
+              <button
+                id="auth-modal-close"
+                onClick={() => setAuthOpen(false)}
+                className="absolute right-4 top-4 text-gray-450 hover:text-white bg-slate-850 hover:bg-slate-800 p-1.5 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <AuthOverlay onAuthSuccess={handleAuthSuccess} onClose={() => setAuthOpen(false)} />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Floating AI chatbot assistant recommendations bubble */}
       <AICompanion onSuggestAction={handleBotSuggestNav} />

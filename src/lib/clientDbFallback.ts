@@ -34,6 +34,18 @@ const initLocalStorage = () => {
   if (!localStorage.getItem("nexora_local_deliveries")) {
     localStorage.setItem("nexora_local_deliveries", JSON.stringify([]));
   }
+  if (!localStorage.getItem("nexora_local_users")) {
+    // Populate an initial default user matching USER_EMAIL context
+    localStorage.setItem("nexora_local_users", JSON.stringify([
+      {
+        email: "fodhis1@gmail.com",
+        name: "Fodhis User",
+        password: "password123",
+        role: "customer",
+        created_at: new Date().toISOString()
+      }
+    ]));
+  }
 };
 
 // Execute initialization
@@ -430,6 +442,59 @@ export const clientDb = {
     } catch (e) {
       console.error(e);
     }
+  },
+
+  registerUser(email: string, name: string, password: string, role: "customer" | "merchant" | "rider", locality?: string, brandName?: string) {
+    try {
+      const allUsers = JSON.parse(localStorage.getItem("nexora_local_users") || "[]");
+      const exists = allUsers.some((u: any) => u.email === email);
+      if (exists) {
+        return { success: false, error: "Email already registered." };
+      }
+      const newUser = {
+        email,
+        name,
+        password,
+        role,
+        locality,
+        brand_name: brandName,
+        created_at: new Date().toISOString()
+      };
+      allUsers.push(newUser);
+      localStorage.setItem("nexora_local_users", JSON.stringify(allUsers));
+      
+      if (role === "merchant" && brandName) {
+        this.registerMerchant(email, brandName, "Independent merchant store listed in NEXORA.");
+      }
+      return { success: true, user: { email, name, role, locality, brandName } };
+    } catch {
+      return { success: false, error: "Database registration failure." };
+    }
+  },
+
+  loginUser(email: string, password: string) {
+    try {
+      const allUsers = JSON.parse(localStorage.getItem("nexora_local_users") || "[]");
+      const user = allUsers.find((u: any) => u.email === email);
+      if (!user) {
+        return { success: false, error: "User not found." };
+      }
+      if (user.password !== password) {
+        return { success: false, error: "Incorrect credentials." };
+      }
+      return {
+        success: true,
+        user: {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          locality: user.locality,
+          brandName: user.brand_name
+        }
+      };
+    } catch {
+      return { success: false, error: "Database verification failure." };
+    }
   }
 };
 
@@ -469,6 +534,19 @@ export const applyFetchPatch = () => {
           isPostgres: false,
           info: "Aesthetics synchronized statically on Vercel deployment."
         });
+      }
+
+      // Intercept user authentication routing
+      if (path === "/api/auth/register" && method === "POST" && init?.body) {
+        const body = JSON.parse(init.body as string);
+        const result = clientDb.registerUser(body.email, body.name, body.password, body.role, body.locality, body.brandName);
+        return jsonResponse(result);
+      }
+
+      if (path === "/api/auth/login" && method === "POST" && init?.body) {
+        const body = JSON.parse(init.body as string);
+        const result = clientDb.loginUser(body.email, body.password);
+        return jsonResponse(result);
       }
 
       // Intercept `/api/products` (GET, POST)

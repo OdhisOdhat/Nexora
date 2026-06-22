@@ -12,7 +12,8 @@ export type Section =
   | "payment"
   | "settings"
   | "merchant-portal"
-  | "admin-panel";
+  | "admin-panel"
+  | "rider-portal";
 
 export interface CartItem {
   id: string;

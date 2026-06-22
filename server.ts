@@ -343,6 +343,36 @@ app.post("/api/merchant/product/update-price", async (req, res) => {
   }
 });
 
+// API Endpoint: User registration
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { email, name, password, role, locality, brandName } = req.body;
+    if (!email || !name || !password || !role) {
+      res.status(400).json({ error: "Please details all required properties: email, name, password, role." });
+      return;
+    }
+    const result = await db.registerUser(email, name, password, role, locality, brandName);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to register user.", details: err.message });
+  }
+});
+
+// API Endpoint: User login
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ error: "Please enter your email and password." });
+      return;
+    }
+    const result = await db.loginUser(email, password);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to log in.", details: err.message });
+  }
+});
+
 // API Endpoint: Retrieve chats histories
 app.get("/api/chats", async (req, res) => {
   try {

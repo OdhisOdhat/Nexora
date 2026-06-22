@@ -21,6 +21,14 @@ interface HeaderProps {
   userEmail: string;
   theme: "light" | "dark";
   onToggleTheme: () => void;
+  user?: {
+    email: string;
+    name: string;
+    role: "customer" | "merchant" | "rider";
+    locality?: string;
+    brandName?: string;
+  } | null;
+  onOpenAuth?: () => void;
 }
 
 export default function Header({
@@ -33,7 +41,9 @@ export default function Header({
   onToggleMobileSidebar,
   userEmail,
   theme,
-  onToggleTheme
+  onToggleTheme,
+  user = null,
+  onOpenAuth
 }: HeaderProps) {
   
   return (
@@ -137,17 +147,42 @@ export default function Header({
         {/* Divider */}
         <div className="h-6 w-[1px] bg-white/[0.08]" />
 
-        {/* Profile Avatar / User identifier */}
-        <div className="flex items-center gap-2 group cursor-pointer">
-          <div className="w-10 h-10 rounded-xl border border-white/[0.08] group-hover:border-nexora-primary transition-all overflow-hidden bg-slate-800 flex items-center justify-center relative">
-            <User className="w-5 h-5 text-gray-300" />
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-slate-900" />
+        {/* Profile Avatar / User identifier or Sign In Control */}
+        {user ? (
+          <div className="flex items-center gap-2 group cursor-pointer" title="Manage connection node">
+            <div className={`w-10 h-10 rounded-xl border transition-all overflow-hidden bg-slate-800 flex items-center justify-center relative ${
+              user.role === "merchant" 
+                ? "border-purple-500/50 group-hover:border-purple-400" 
+                : user.role === "rider" 
+                  ? "border-emerald-500/50 group-hover:border-emerald-400" 
+                  : "border-white/[0.08] group-hover:border-nexora-primary"
+            }`}>
+              <User className="w-5 h-5 text-gray-300" />
+              <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border border-slate-900 ${
+                user.role === "merchant" 
+                  ? "bg-purple-500" 
+                  : user.role === "rider" 
+                    ? "bg-emerald-500" 
+                    : "bg-nexora-primary"
+              }`} />
+            </div>
+            <div className="hidden lg:block text-left">
+              <p className="text-xs font-semibold text-gray-200 truncate max-w-28">{user.name}</p>
+              <p className="text-[9px] text-gray-400 font-mono truncate max-w-28 uppercase tracking-wider font-bold">
+                {user.role} {user.brandName ? `(${user.brandName})` : user.locality ? `[${user.locality}]` : ""}
+              </p>
+            </div>
           </div>
-          <div className="hidden lg:block text-left">
-            <p className="text-xs font-semibold text-gray-200 truncate max-w-28">Current User</p>
-            <p className="text-[10px] text-gray-400 font-mono truncate max-w-28">{userEmail || "user@nexora.io"}</p>
-          </div>
-        </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenAuth}
+            className="px-4 py-2 bg-gradient-to-r from-purple-650 to-indigo-650 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all hover:scale-105 cursor-pointer flex items-center gap-1"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
     </header>
   );

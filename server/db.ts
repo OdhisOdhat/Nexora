@@ -36,6 +36,15 @@ interface LocalDbSchema {
     estimated_minutes: number;
     last_update: string;
   }[];
+  users: {
+    email: string;
+    name: string;
+    password?: string;
+    role: "customer" | "merchant" | "rider";
+    locality?: string;
+    brand_name?: string;
+    created_at: string;
+  }[];
 }
 
 class DatabaseManager {
@@ -50,7 +59,8 @@ class DatabaseManager {
     order_items: [],
     chat_messages: [],
     merchants: [],
-    deliveries: []
+    deliveries: [],
+    users: []
   };
 
   constructor() {
@@ -227,6 +237,19 @@ class DatabaseManager {
               target_lng DOUBLE PRECISION NOT NULL,
               estimated_minutes INT NOT NULL,
               last_update TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        // Create users table
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS users (
+              email VARCHAR(255) PRIMARY KEY,
+              name VARCHAR(255) NOT NULL,
+              password VARCHAR(255) NOT NULL,
+              role VARCHAR(50) NOT NULL,
+              locality VARCHAR(255),
+              brand_name VARCHAR(255),
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
           );
         `);
 
@@ -915,6 +938,115 @@ class DatabaseManager {
       return { success: true };
     }
     return { success: false, error: "Product not located, or unauthorized." };
+  }
+
+  public async registerUser(
+    email: string,
+    name: string,
+    password: string,
+    role: "customer" | "merchant" | "rider",
+    locality?: string,
+    brand_name?: string
+  ) {
+    if (this.isPostgresActive && this.pool) {
+      try {
+        const check = await this.pool.query("SELECT email FROM users WHERE email = $1", [email]);
+        if (check.rows.length > 0) {
+          return { success: false, error: "Email already registered." };
+        }
+        await this.pool.query(
+          `INSERT INTO users (email, name, password, role, locality, brand_name) VALUES ($1, $2, $3, $4, $5, $6)`,
+          [email, name, password, role, locality || null, brand_name || null]
+        );
+        if (role === "merchant" && brand_name) {
+          await this.pool.query(
+            "INSERT INTO merchants (email, brand_name, description) VALUES ($1, $2, $3) ON CONFLICT (email) DO NOTHING",
+            [email, brand_name, "Independent merchant store listed in NEXORA."]
+          );
+        }
+        return { success: true, user: { email, name, role, locality, brandName: brand_name } };
+      } catch (err: any) {
+        console.error("PG register user failed", err);
+        return { success: false, error: err.message };
+      }
+    }
+
+    const exists = this.localDb.users.some(u => u.email === email);
+    if (exists) {
+      return { success: false, error: "Email already registered." };
+    }
+    const newUser = {
+      email,
+      name,
+      password,
+      role,
+      locality,
+      brand_name,
+      created_at: new Date().toISOString()
+    };
+    this.localDb.users.push(newUser);
+    if (role === "merchant" && brand_name) {
+      const mExists = this.localDb.merchants.some(m => m.email === email);
+      if (!mExists) {
+        this.localDb.merchants.push({
+          email,
+          brand_name,
+          description: "Independent merchant store listed in NEXORA.",
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+    this.saveLocalData();
+    return { success: true, user: { email, name, role, locality, brandName: brand_name } };
+  }
+
+  public async loginUser(email: string, password: string) {
+    if (this.isPostgresActive && this.pool) {
+      try {
+        const result = await this.pool.query(
+          "SELECT email, name, password, role, locality, brand_name FROM users WHERE email = $1",
+          [email]
+        );
+        if (result.rows.length === 0) {
+          return { success: false, error: "User not found." };
+        }
+        const user = result.rows[0];
+        if (user.password !== password) {
+          return { success: false, error: "Incorrect credentials." };
+        }
+        return {
+          success: true,
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            locality: user.locality,
+            brandName: user.brand_name
+          }
+        };
+      } catch (err: any) {
+        console.error("PG login user failed", err);
+        return { success: false, error: err.message };
+      }
+    }
+
+    const user = this.localDb.users.find(u => u.email === email);
+    if (!user) {
+      return { success: false, error: "User not found." };
+    }
+    if (user.password !== password) {
+      return { success: false, error: "Incorrect credentials." };
+    }
+    return {
+      success: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        locality: user.locality,
+        brandName: user.brand_name
+      }
+    };
   }
 
   public async getAdminOverview() {
