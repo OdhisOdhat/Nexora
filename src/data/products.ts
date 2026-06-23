@@ -34,6 +34,7 @@ export interface Product {
   merchantEmail?: string;
   merchantLocation?: string;
   isDigital?: boolean;
+  subCategoryType?: string;
 }
 
 export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
@@ -43,7 +44,15 @@ export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
   "Beauty": ["Fragrance", "Skincare", "Cosmetics", "Personal Care"],
   "Lifestyle": ["Travel", "Wellness", "Daily Essentials", "Gifts"],
   "Fashion": ["Men", "Women", "Children", "Babies"],
-  "Digital Art": ["Murals", "Holograms", "Concept Art", "Generative"]
+  "Digital Art": ["Murals", "Holograms", "Concept Art", "Generative"],
+  "Vehicles": ["Electric Cars", "Motorcycles", "Hoverpods", "E-Bikes & Scooters", "Drones"]
+};
+
+export const FASHION_SUBCATEGORY_TYPES: Record<string, string[]> = {
+  "Men": ["Clothing", "Footwear", "Accessories", "Outerwear"],
+  "Women": ["Dresses", "Tops", "Handbags", "Footwear", "Accessories"],
+  "Children": ["Clothing", "Footwear", "Toys", "Accessories"],
+  "Babies": ["Onesies", "Rompers", "Sleepwear", "Accessories"]
 };
 
 export const PRODUCTS: Product[] = [
@@ -120,6 +129,7 @@ export const PRODUCTS: Product[] = [
     name: "Minimal Backpack",
     category: "Fashion",
     subCategory: "Men",
+    subCategoryType: "Accessories",
     price: 49.99,
     rating: 4.6,
     ratingCount: 88,
@@ -144,6 +154,7 @@ export const PRODUCTS: Product[] = [
     name: "Aviator Sunglasses",
     category: "Fashion",
     subCategory: "Women",
+    subCategoryType: "Accessories",
     price: 59.99,
     rating: 4.4,
     ratingCount: 76,
@@ -156,6 +167,7 @@ export const PRODUCTS: Product[] = [
     name: "Kids Adaptive Smart Hoodie",
     category: "Fashion",
     subCategory: "Children",
+    subCategoryType: "Clothing",
     price: 69.99,
     rating: 4.7,
     ratingCount: 32,
@@ -168,6 +180,7 @@ export const PRODUCTS: Product[] = [
     name: "Eco-Weave Intelligent Romper",
     category: "Fashion",
     subCategory: "Babies",
+    subCategoryType: "Rompers",
     price: 39.99,
     rating: 4.9,
     ratingCount: 15,
@@ -249,5 +262,42 @@ export const PRODUCTS: Product[] = [
     tag: "Rare Premium",
     isTrending: true,
     isDigital: true
+  },
+  {
+    id: "vehicle-apex-scooter",
+    name: "Apex Cyber E-Scooter",
+    category: "Vehicles",
+    subCategory: "E-Bikes & Scooters",
+    price: 1299.99,
+    rating: 4.8,
+    ratingCount: 37,
+    description: "Sleek aircraft-grade carbon fiber scooter featuring dual 1200W electric hubs, electromagnetic regenerative brakes, and a smart dashboard with HUD support.",
+    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800",
+    tag: "Trending"
+  },
+  {
+    id: "vehicle-nebula-drone",
+    name: "Nebula Ultra-Range Drone",
+    category: "Vehicles",
+    subCategory: "Drones",
+    price: 899.99,
+    rating: 4.7,
+    ratingCount: 54,
+    description: "Ultra-stabilized tri-rotor aerial system supporting cinematic 8K streams, intelligent AI collision barriers, and safe automated return-to-base maneuvers.",
+    image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&q=80&w=800",
+    tag: "Staff Pick"
+  },
+  {
+    id: "vehicle-hyper-one",
+    name: "Hyper-One Electric Concept Bike",
+    category: "Vehicles",
+    subCategory: "Motorcycles",
+    price: 24500.00,
+    rating: 4.9,
+    ratingCount: 12,
+    description: "A gorgeous limited-edition electric motorcycle offering liquid-cooled torque vectoring, holographic instrumentation panel, and premium fast-charging technology.",
+    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=800",
+    tag: "Rare Premium",
+    isFeatured: true
   }
 ];

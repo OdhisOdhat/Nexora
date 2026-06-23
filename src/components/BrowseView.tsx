@@ -1,6 +1,6 @@
 import React from "react";
 import { Search } from "lucide-react";
-import { Product, CATEGORY_SUBCATEGORIES } from "../data/products";
+import { Product, CATEGORY_SUBCATEGORIES, FASHION_SUBCATEGORY_TYPES } from "../data/products";
 import ProductCard from "./ProductCard";
 
 interface BrowseViewProps {
@@ -10,6 +10,8 @@ interface BrowseViewProps {
   setSelectedCategory: (cat: string) => void;
   selectedSubCategory: string;
   setSelectedSubCategory: (sub: string) => void;
+  selectedSubCategoryType: string;
+  setSelectedSubCategoryType: (type: string) => void;
   filteredProducts: Product[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -27,6 +29,8 @@ export default function BrowseView({
   setSelectedCategory,
   selectedSubCategory,
   setSelectedSubCategory,
+  selectedSubCategoryType,
+  setSelectedSubCategoryType,
   filteredProducts,
   searchQuery,
   setSearchQuery,
@@ -96,6 +100,33 @@ export default function BrowseView({
                   `}
                 >
                   {sub}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic Fashion Subcategory Types sub-bar */}
+        {selectedCategory === "Fashion" && selectedSubCategory !== "All" && FASHION_SUBCATEGORY_TYPES[selectedSubCategory] && (
+          <div className="mt-3 pt-3 border-t border-white/[0.04] flex items-center gap-3 overflow-x-auto pb-1 no-scrollbar select-none">
+            <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest whitespace-nowrap">
+              Types:
+            </span>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+              {["All", ...FASHION_SUBCATEGORY_TYPES[selectedSubCategory]].map((type) => (
+                <button
+                  key={type}
+                  id={`page-subcategory-type-tab-${type.toLowerCase().replace(/\s+/g, "-")}`}
+                  onClick={() => setSelectedSubCategoryType(type)}
+                  className={`
+                    px-3 py-1.5 text-[11px] font-mono rounded-lg border shrink-0 transition-all cursor-pointer
+                    ${selectedSubCategoryType === type
+                      ? "bg-fuchsia-500/20 border-fuchsia-500/40 text-fuchsia-200"
+                      : "bg-nexora-surface/60 border-white/[0.04] text-gray-400 hover:text-white hover:border-fuchsia-500/20"
+                    }
+                  `}
+                >
+                  {type}
                 </button>
               ))}
             </div>

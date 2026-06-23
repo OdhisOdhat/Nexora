@@ -57,10 +57,15 @@ export default function App() {
   const [currentSection, setCurrentSection] = useState<Section>("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("All");
+  const [selectedSubCategoryType, setSelectedSubCategoryType] = useState<string>("All");
 
   useEffect(() => {
     setSelectedSubCategory("All");
   }, [selectedCategory]);
+
+  useEffect(() => {
+    setSelectedSubCategoryType("All");
+  }, [selectedSubCategory]);
 
   // Dynamic Authenticated User State
   const [user, setUser] = useState<{
@@ -387,7 +392,7 @@ export default function App() {
   };
 
   // Safe category filter matching list matches
-  const categoriesList = ["All", "Electronics", "Sports", "Home & Living", "Beauty", "Lifestyle", "Fashion", "Digital Art"];
+  const categoriesList = ["All", "Electronics", "Sports", "Home & Living", "Beauty", "Lifestyle", "Fashion", "Digital Art", "Vehicles"];
 
   // Perform search and filter calculations
   const filteredProducts = useMemo(() => {
@@ -407,6 +412,9 @@ export default function App() {
       // 3. Subcategory check
       const matchesSubCategory = selectedSubCategory === "All" || product.subCategory === selectedSubCategory;
 
+      // 3.5 Subcategory Type check
+      const matchesSubCategoryType = selectedSubCategoryType === "All" || product.subCategoryType === selectedSubCategoryType;
+
       // 4. Page specific filters checks
       let matchesPage = true;
       if (currentSection === "deals") {
@@ -418,9 +426,9 @@ export default function App() {
         matchesPage = true;
       }
 
-      return matchesSearch && matchesCategory && matchesSubCategory && matchesPage;
+      return matchesSearch && matchesCategory && matchesSubCategory && matchesSubCategoryType && matchesPage;
     });
-  }, [searchQuery, selectedCategory, selectedSubCategory, currentSection, productsList]);
+  }, [searchQuery, selectedCategory, selectedSubCategory, selectedSubCategoryType, currentSection, productsList]);
 
   // Derived featured list outputs
   const featuredProducts = useMemo(() => {
@@ -549,6 +557,8 @@ export default function App() {
               setSelectedCategory={setSelectedCategory}
               selectedSubCategory={selectedSubCategory}
               setSelectedSubCategory={setSelectedSubCategory}
+              selectedSubCategoryType={selectedSubCategoryType}
+              setSelectedSubCategoryType={setSelectedSubCategoryType}
               filteredProducts={filteredProducts}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

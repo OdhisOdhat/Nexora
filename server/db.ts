@@ -133,6 +133,7 @@ class DatabaseManager {
               name VARCHAR(255) NOT NULL,
               category VARCHAR(100) NOT NULL,
               sub_category VARCHAR(100),
+              sub_category_type VARCHAR(100),
               price DECIMAL(10, 2) NOT NULL,
               original_price DECIMAL(10, 2),
               rating DECIMAL(3, 2) DEFAULT 4.5,
@@ -218,6 +219,9 @@ class DatabaseManager {
         await client.query(`
           ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_category VARCHAR(100);
         `);
+        await client.query(`
+          ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_category_type VARCHAR(100);
+        `);
 
         // Create merchants table
         await client.query(`
@@ -271,13 +275,14 @@ class DatabaseManager {
           console.log("📊 Seeding products into PostgreSQL database...");
           for (const p of PRODUCTS) {
             await client.query(
-              `INSERT INTO products (id, name, category, sub_category, price, original_price, rating, rating_count, description, image, tag, is_featured, is_trending)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+              `INSERT INTO products (id, name, category, sub_category, sub_category_type, price, original_price, rating, rating_count, description, image, tag, is_featured, is_trending)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
               [
                 p.id,
                 p.name,
                 p.category,
                 p.subCategory || null,
+                p.subCategoryType || null,
                 p.price,
                 p.originalPrice || null,
                 p.rating,
@@ -400,6 +405,7 @@ class DatabaseManager {
           name: row.name,
           category: row.category,
           subCategory: row.sub_category || undefined,
+          subCategoryType: row.sub_category_type || undefined,
           price: parseFloat(row.price),
           originalPrice: row.original_price ? parseFloat(row.original_price) : undefined,
           rating: parseFloat(row.rating),
@@ -919,14 +925,15 @@ class DatabaseManager {
     merchantEmail: string,
     isDigital: boolean = false,
     tag: string = "Merchant Spec",
-    subCategory?: string
+    subCategory?: string,
+    subCategoryType?: string
   ) {
     if (this.isPostgresActive && this.pool) {
       try {
         await this.pool.query(
-          `INSERT INTO products (id, name, category, sub_category, price, description, image, rating, rating_count, merchant_brand, merchant_email, is_digital, tag)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, 4.5, 1, $8, $9, $10, $11)`,
-          [id, name, category, subCategory || null, price, description, image, merchantBrand, merchantEmail, isDigital, tag]
+          `INSERT INTO products (id, name, category, sub_category, sub_category_type, price, description, image, rating, rating_count, merchant_brand, merchant_email, is_digital, tag)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 4.5, 1, $9, $10, $11, $12)`,
+          [id, name, category, subCategory || null, subCategoryType || null, price, description, image, merchantBrand, merchantEmail, isDigital, tag]
         );
         return { success: true };
       } catch (err) {
@@ -941,6 +948,7 @@ class DatabaseManager {
       name,
       category,
       subCategory,
+      subCategoryType,
       price,
       rating: 4.5,
       ratingCount: 1,
@@ -989,15 +997,16 @@ class DatabaseManager {
     description: string,
     isDigital: boolean,
     tag: string,
-    subCategory?: string
+    subCategory?: string,
+    subCategoryType?: string
   ) {
     if (this.isPostgresActive && this.pool) {
       try {
         const result = await this.pool.query(
           `UPDATE products 
-           SET name = $1, category = $2, price = $3, description = $4, is_digital = $5, tag = $6, sub_category = $7 
-           WHERE id = $8 AND merchant_email = $9`,
-          [name, category, price, description, isDigital, tag, subCategory || null, id, merchantEmail]
+           SET name = $1, category = $2, price = $3, description = $4, is_digital = $5, tag = $6, sub_category = $7, sub_category_type = $8 
+           WHERE id = $9 AND merchant_email = $10`,
+          [name, category, price, description, isDigital, tag, subCategory || null, subCategoryType || null, id, merchantEmail]
         );
         return { success: (result.rowCount ? result.rowCount > 0 : false) };
       } catch (err) {
@@ -1013,6 +1022,7 @@ class DatabaseManager {
         name,
         category,
         subCategory,
+        subCategoryType,
         price,
         description,
         isDigital,

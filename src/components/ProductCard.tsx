@@ -114,7 +114,7 @@ export default function ProductCard({
           <div className="flex flex-wrap items-center justify-between gap-1.5">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-mono font-bold tracking-widest text-nexora-primary uppercase">
-                {product.category}{product.subCategory ? ` // ${product.subCategory}` : ""}
+                {product.category}{product.subCategory ? ` // ${product.subCategory}` : ""}{product.subCategoryType ? ` // ${product.subCategoryType}` : ""}
               </span>
               {product.isDigital && (
                 <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-extrabold tracking-tight uppercase border border-amber-500/15">

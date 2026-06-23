@@ -129,7 +129,7 @@ export default function ProductDetailModal({
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-mono font-bold text-nexora-primary tracking-widest uppercase">
-                      {product.category}{product.subCategory ? ` // ${product.subCategory}` : ""}
+                      {product.category}{product.subCategory ? ` // ${product.subCategory}` : ""}{product.subCategoryType ? ` // ${product.subCategoryType}` : ""}
                     </span>
                     {product.merchantLocation && (
                       <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[10px] font-bold flex items-center gap-1">

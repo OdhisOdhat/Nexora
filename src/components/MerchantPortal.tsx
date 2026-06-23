@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight, Edit2, X, Filter } from "lucide-react";
 import { motion } from "motion/react";
-import { Product, MERCHANT_LOCATIONS, CATEGORY_SUBCATEGORIES } from "../data/products";
+import { Product, MERCHANT_LOCATIONS, CATEGORY_SUBCATEGORIES, FASHION_SUBCATEGORY_TYPES } from "../data/products";
 
 interface MerchantPortalProps {
   userEmail: string;
@@ -15,7 +15,8 @@ const CATEGORIES_PRESETS = [
   "Beauty",
   "Lifestyle",
   "Fashion",
-  "Digital Art"
+  "Digital Art",
+  "Vehicles"
 ];
 
 const PRESET_IMAGES = [
@@ -61,6 +62,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [prodName, setProdName] = useState("");
   const [prodCategory, setProdCategory] = useState("Electronics");
   const [prodSubCategory, setProdSubCategory] = useState("");
+  const [prodSubCategoryType, setProdSubCategoryType] = useState("");
   const [prodPrice, setProdPrice] = useState("");
   const [prodDesc, setProdDesc] = useState("");
   const [prodImage, setProdImage] = useState(PRESET_IMAGES[2].url); // Prefer high-tech image by default
@@ -88,7 +90,8 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState<string>("");
   const [editCategoryValue, setEditCategoryValue] = useState<string>("Electronics");
-  const [editSubCategoryValue, setEditSubCategoryValue] = useState<string>("");
+  const [editSubCategoryValue, setEditSubCategoryValue] = useState<string>("All");
+  const [editSubCategoryTypeValue, setEditSubCategoryTypeValue] = useState<string>("");
   const [editPriceValue, setEditPriceValue] = useState<string>("");
 
   // Set default subcategory when editCategoryValue changes
@@ -98,6 +101,28 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
       setEditSubCategoryValue(subs[0] || "");
     }
   }, [editCategoryValue]);
+
+  // Set default subcategory type when prodSubCategory changes
+  useEffect(() => {
+    if (prodCategory === "Fashion") {
+      const types = FASHION_SUBCATEGORY_TYPES[prodSubCategory] || [];
+      setProdSubCategoryType(types[0] || "");
+    } else {
+      setProdSubCategoryType("");
+    }
+  }, [prodSubCategory, prodCategory]);
+
+  // Set default subcategory type when editSubCategoryValue changes
+  useEffect(() => {
+    if (editCategoryValue === "Fashion") {
+      const types = FASHION_SUBCATEGORY_TYPES[editSubCategoryValue] || [];
+      if (!types.includes(editSubCategoryTypeValue)) {
+        setEditSubCategoryTypeValue(types[0] || "");
+      }
+    } else {
+      setEditSubCategoryTypeValue("");
+    }
+  }, [editSubCategoryValue, editCategoryValue]);
   const [editDescValue, setEditDescValue] = useState<string>("");
   const [editIsDigitalValue, setEditIsDigitalValue] = useState<boolean>(false);
   const [editIsPremiumValue, setEditIsPremiumValue] = useState<boolean>(false);
@@ -120,6 +145,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
     setEditNameValue(p.name);
     setEditCategoryValue(p.category || "Electronics");
     setEditSubCategoryValue(p.subCategory || "");
+    setEditSubCategoryTypeValue(p.subCategoryType || "");
     setEditPriceValue(p.price.toString());
     setEditDescValue(p.description || "");
     setEditIsDigitalValue(!!p.isDigital);
@@ -152,7 +178,8 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
           description: editDescValue,
           isDigital: editIsDigitalValue,
           tag: finalTag,
-          subCategory: editSubCategoryValue
+          subCategory: editSubCategoryValue,
+          subCategoryType: editSubCategoryTypeValue
         })
       });
 
@@ -163,6 +190,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
         setEditNameValue("");
         setEditCategoryValue("Electronics");
         setEditSubCategoryValue("");
+        setEditSubCategoryTypeValue("");
         setEditPriceValue("");
         setEditDescValue("");
         setEditIsDigitalValue(false);
@@ -404,6 +432,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
           name: prodName,
           category: prodCategory,
           subCategory: prodSubCategory,
+          subCategoryType: prodSubCategoryType,
           price: parseFloat(prodPrice),
           description: prodDesc || (prodIsDigital ? "Exclusive High-Fidelity premium digital art collectible. Authenticated artist signature & secure cloud node download." : "High-tech premium product offered by our customized merchant brand."),
           image: prodImage,
@@ -417,6 +446,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
       if (res.ok) {
         setSuccessMsg(`Successfully listed "${prodName}" in the Nexora central index!`);
         setProdName("");
+        setProdSubCategoryType("");
         setProdPrice("");
         setProdDesc("");
         setProdTag("Merchant Spec");
@@ -874,6 +904,24 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                   </div>
                 </div>
 
+                {prodCategory === "Fashion" && (
+                  <div>
+                    <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="product-subcategorytype-picker">
+                      Fashion Type (for {prodSubCategory})
+                    </label>
+                    <select
+                      id="product-subcategorytype-picker"
+                      value={prodSubCategoryType}
+                      onChange={(e) => setProdSubCategoryType(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-lg bg-slate-950/85 border border-white/[0.08] text-white text-xs focus:outline-none transition-all duration-150"
+                    >
+                      {(FASHION_SUBCATEGORY_TYPES[prodSubCategory] || []).map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="product-price-input">
                     Price (USD)
@@ -1145,6 +1193,24 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                                       ))}
                                     </select>
                                   </div>
+
+                                  {/* Product Fashion Type (subcategory type) */}
+                                  {editCategoryValue === "Fashion" && (
+                                    <div>
+                                      <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Fashion Type</label>
+                                      <select
+                                        value={editSubCategoryTypeValue}
+                                        onChange={(e) => setEditSubCategoryTypeValue(e.target.value)}
+                                        className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs focus:outline-none"
+                                      >
+                                        {(FASHION_SUBCATEGORY_TYPES[editSubCategoryValue] || []).map((type) => (
+                                          <option key={type} value={type}>
+                                            {type}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
 
                                   {/* Category tag */}
                                   <div>
