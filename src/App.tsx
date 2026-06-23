@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-import { PRODUCTS, Product } from "./data/products";
+import { PRODUCTS, Product, MERCHANT_LOCATIONS } from "./data/products";
 import { Section, CartItem } from "./types";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
@@ -113,6 +113,16 @@ export default function App() {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [productsList, setProductsList] = useState<Product[]>(PRODUCTS);
 
+  // Global Currency conversion state
+  const [currency, setCurrency] = useState<string>(() => {
+    return localStorage.getItem("nexora_selected_currency") || "USD";
+  });
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrency(newCurrency);
+    localStorage.setItem("nexora_selected_currency", newCurrency);
+  };
+
   // Prime status state
   const [isPrimeUser, setIsPrimeUser] = useState(() => {
     return localStorage.getItem("nexora_prime") === "true";
@@ -198,6 +208,20 @@ export default function App() {
   useEffect(() => {
     syncWithDatabase();
   }, [syncWithDatabase]);
+
+  // Check URL query parameters on startup to auto-open shared products
+  useEffect(() => {
+    if (productsList && productsList.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get("product");
+      if (productId) {
+        const found = productsList.find((p) => p.id === productId);
+        if (found) {
+          setSelectedProduct(found);
+        }
+      }
+    }
+  }, [productsList]);
 
   // Deal of the Day active ticker loop
   useEffect(() => {
@@ -439,6 +463,8 @@ export default function App() {
           userEmail={currentUserEmail}
           theme={theme}
           onToggleTheme={toggleTheme}
+          currency={currency}
+          onCurrencyChange={handleCurrencyChange}
           user={user}
           onOpenAuth={() => setAuthOpen(true)}
         />
@@ -504,6 +530,7 @@ export default function App() {
               setSubscribeEmail={setSubscribeEmail}
               subscribeStatus={subscribeStatus}
               handleSubscribe={handleSubscribe}
+              currency={currency}
             />
           ) : currentSection === "categories" || currentSection === "deals" ? (
             <BrowseView
@@ -518,6 +545,7 @@ export default function App() {
               setSelectedProduct={setSelectedProduct}
               handleToggleWishlist={handleToggleWishlist}
               wishlist={wishlist}
+              currency={currency}
             />
           ) : currentSection === "collections" ? (
             <CollectionsView
@@ -545,6 +573,7 @@ export default function App() {
               setSelectedProduct={setSelectedProduct}
               handleToggleWishlist={handleToggleWishlist}
               setCurrentSection={setCurrentSection}
+              currency={currency}
             />
           ) : currentSection === "orders" ? (
             !user ? (
@@ -632,6 +661,7 @@ export default function App() {
         onAddToCart={handleAddToCart}
         isWishlisted={selectedProduct ? wishlist.includes(selectedProduct.id) : false}
         onToggleWishlist={handleToggleWishlist}
+        currency={currency}
       />
 
       {/* Shopping Cart Drawer panel */}
@@ -643,6 +673,7 @@ export default function App() {
         onRemoveItem={handleRemoveItem}
         onClearCart={handleClearCart}
         isPrimeUser={isPrimeUser}
+        currency={currency}
       />
 
       {/* Wishlist Drawer slide-out */}

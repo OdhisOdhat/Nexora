@@ -1,6 +1,7 @@
-import { X, Star, Heart, ShoppingBag, ShieldCheck, Truck, RefreshCw, Zap } from "lucide-react";
+import React, { useState } from "react";
+import { X, Star, Heart, ShoppingBag, ShieldCheck, Truck, RefreshCw, Zap, MapPin, Copy, Share2, Send, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Product } from "../data/products";
+import { Product, MERCHANT_LOCATIONS } from "../data/products";
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -8,6 +9,7 @@ interface ProductDetailModalProps {
   onAddToCart: (p: Product) => void;
   isWishlisted: boolean;
   onToggleWishlist: (p: Product) => void;
+  currency?: string;
 }
 
 export default function ProductDetailModal({
@@ -15,9 +17,38 @@ export default function ProductDetailModal({
   onClose,
   onAddToCart,
   isWishlisted,
-  onToggleWishlist
+  onToggleWishlist,
+  currency = "USD"
 }: ProductDetailModalProps) {
   if (!product) return null;
+
+  const [isCopied, setIsCopied] = useState(false);
+
+  const shareUrl = `${window.location.origin}/?product=${product.id}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2500);
+      })
+      .catch((err) => {
+        console.error("Failed to copy link: ", err);
+      });
+  };
+
+  const formatPrice = (priceUSD: number, merchantLoc?: string) => {
+    let targetCurrencyCode = currency;
+    if (currency === "LOCAL") {
+      const loc = merchantLoc || "US";
+      const locInfo = MERCHANT_LOCATIONS[loc] || MERCHANT_LOCATIONS.US;
+      targetCurrencyCode = locInfo.code;
+    }
+
+    const info = Object.values(MERCHANT_LOCATIONS).find(m => m.code === targetCurrencyCode) || MERCHANT_LOCATIONS.US;
+    const converted = priceUSD * info.rate;
+    return `${info.symbol}${converted.toFixed(2)}`;
+  };
 
   return (
     <AnimatePresence>
@@ -96,9 +127,16 @@ export default function ProductDetailModal({
               {/* Right Column: Specification panel */}
               <div className="flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-mono font-bold text-nexora-primary tracking-widest uppercase">
-                    {product.category}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-nexora-primary tracking-widest uppercase">
+                      {product.category}
+                    </span>
+                    {product.merchantLocation && (
+                      <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[10px] font-bold flex items-center gap-1">
+                        {MERCHANT_LOCATIONS[product.merchantLocation]?.flag || "📍"} {MERCHANT_LOCATIONS[product.merchantLocation]?.name || product.merchantLocation} Storefront Node
+                      </span>
+                    )}
+                  </div>
                   <h2 className="text-2xl md:text-3xl font-sans font-bold text-white tracking-tight mt-1.5 leading-snug">
                     {product.name}
                   </h2>
@@ -117,11 +155,11 @@ export default function ProductDetailModal({
                   {/* Pricing labels */}
                   <div className="flex items-baseline gap-3 mt-6">
                     <span className="text-3xl font-mono font-bold text-purple-300">
-                      ${product.price ? product.price.toFixed(2) : ""}
+                      {formatPrice(product.price, product.merchantLocation)}
                     </span>
                     {product.originalPrice && (
                       <span className="text-sm text-gray-500 line-through font-mono">
-                        ${product.originalPrice.toFixed(2)}
+                        {formatPrice(product.originalPrice, product.merchantLocation)}
                       </span>
                     )}
                   </div>
@@ -129,6 +167,56 @@ export default function ProductDetailModal({
                   <p className="text-sm text-gray-400 leading-relaxed mt-6 border-t border-white/[0.04] pt-6">
                     {product.description}
                   </p>
+
+                  {/* Share item row */}
+                  <div className="mt-6 pt-6 border-t border-white/[0.04] space-y-3">
+                    <span className="block text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                      Share & Broadcast Node
+                    </span>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {/* Copy Link Action Button */}
+                      <button
+                        id="share-copy-link-btn"
+                        onClick={handleCopyLink}
+                        className="flex items-center gap-2 px-3.5 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/30 active:scale-95 rounded-xl text-xs text-purple-300 hover:text-purple-200 transition-all cursor-pointer font-mono font-semibold"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-green-400 font-bold" />
+                            <span className="text-green-400 font-bold">Link Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Social sharing anchors */}
+                      <a
+                        id="share-twitter-link"
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this incredible futuristic item on Nexora: ${product.name}`)}&url=${encodeURIComponent(shareUrl)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-850 text-gray-400 hover:text-white border border-white/[0.04] hover:border-white/[0.08] active:scale-95 rounded-xl text-xs font-mono transition-all"
+                      >
+                        <Share2 className="w-3.5 h-3.5 text-blue-400" />
+                        <span>X / Twitter</span>
+                      </a>
+
+                      <a
+                        id="share-telegram-link"
+                        href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Nexora premium node: ${product.name}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-850 text-gray-400 hover:text-white border border-white/[0.04] hover:border-white/[0.08] active:scale-95 rounded-xl text-xs font-mono transition-all"
+                      >
+                        <Send className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Telegram</span>
+                      </a>
+                    </div>
+                  </div>
 
                   {/* Specifications table */}
                   <div className="mt-6 space-y-2 text-xs">

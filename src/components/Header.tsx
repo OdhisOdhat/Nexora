@@ -21,6 +21,8 @@ interface HeaderProps {
   userEmail: string;
   theme: "light" | "dark";
   onToggleTheme: () => void;
+  currency: string;
+  onCurrencyChange: (currency: string) => void;
   user?: {
     email: string;
     name: string;
@@ -42,6 +44,8 @@ export default function Header({
   userEmail,
   theme,
   onToggleTheme,
+  currency,
+  onCurrencyChange,
   user = null,
   onOpenAuth
 }: HeaderProps) {
@@ -143,6 +147,26 @@ export default function Header({
             {cartCount}
           </span>
         </button>
+
+        {/* Dynamic Global Currency Selector */}
+        <div className="relative">
+          <select
+            id="currency-selector"
+            value={currency}
+            onChange={(e) => onCurrencyChange(e.target.value)}
+            className="px-2.5 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-900 text-gray-300 hover:text-white text-xs font-bold font-mono border border-white/[0.06] hover:border-white/[0.12] focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer transition-all duration-200"
+            title="Convert marketplace prices based on merchant base currency"
+          >
+            <option value="USD" className="bg-slate-950 text-white">🇺🇸 USD ($)</option>
+            <option value="GBP" className="bg-slate-950 text-white">🇬🇧 GBP (£)</option>
+            <option value="EUR" className="bg-slate-950 text-white">🇪🇺 EUR (€)</option>
+            <option value="JPY" className="bg-slate-950 text-white">🇯🇵 JPY (¥)</option>
+            <option value="KES" className="bg-slate-950 text-white">🇰🇪 KES (KSh)</option>
+            <option value="CAD" className="bg-slate-950 text-white">🇨🇦 CAD (C$)</option>
+            <option value="AUD" className="bg-slate-950 text-white">🇦🇺 AUD (A$)</option>
+            <option value="LOCAL" className="bg-slate-950 text-purple-300 font-bold">🌍 Local Currency</option>
+          </select>
+        </div>
 
         {/* Divider */}
         <div className="h-6 w-[1px] bg-white/[0.08]" />

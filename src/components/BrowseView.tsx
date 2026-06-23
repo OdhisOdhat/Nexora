@@ -15,6 +15,7 @@ interface BrowseViewProps {
   setSelectedProduct: (product: Product) => void;
   handleToggleWishlist: (product: Product) => void;
   wishlist: string[];
+  currency?: string;
 }
 
 export default function BrowseView({
@@ -28,7 +29,8 @@ export default function BrowseView({
   handleAddToCart,
   setSelectedProduct,
   handleToggleWishlist,
-  wishlist
+  wishlist,
+  currency = "USD"
 }: BrowseViewProps) {
   const isDeals = currentSection === "deals";
 
@@ -94,6 +96,7 @@ export default function BrowseView({
               onSelectProduct={(p) => setSelectedProduct(p)}
               onToggleWishlist={handleToggleWishlist}
               isWishlisted={wishlist.includes(p.id)}
+              currency={currency}
             />
           ))}
         </div>

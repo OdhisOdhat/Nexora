@@ -220,12 +220,12 @@ app.get("/api/merchant", async (req, res) => {
 // API Endpoint: Register merchant
 app.post("/api/merchant/register", async (req, res) => {
   try {
-    const { email, brandName, description, logoUrl } = req.body;
+    const { email, brandName, description, logoUrl, location } = req.body;
     if (!email || !brandName) {
       res.status(400).json({ error: "Email and Brand Name are required." });
       return;
     }
-    const result = await db.registerMerchant(email, brandName, description || "", logoUrl);
+    const result = await db.registerMerchant(email, brandName, description || "", logoUrl, location);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: "Failed to register merchant profile.", details: err.message });

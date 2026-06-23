@@ -22,7 +22,7 @@ interface LocalDbSchema {
   }[];
   order_items: { id: number; order_id: string; product_id: string; quantity: number; unit_price: number }[];
   chat_messages: { id: number; user_email: string; role: string; content: string; timestamp: string }[];
-  merchants: { email: string; brand_name: string; description: string; logo_url?: string; created_at: string }[];
+  merchants: { email: string; brand_name: string; description: string; logo_url?: string; location?: string; created_at: string }[];
   deliveries: {
     order_id: string;
     rider_id: string;
@@ -225,6 +225,9 @@ class DatabaseManager {
               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
           );
         `);
+        await client.query(`
+          ALTER TABLE merchants ADD COLUMN IF NOT EXISTS location VARCHAR(100) DEFAULT 'US';
+        `);
 
         // Create deliveries table
         await client.query(`
@@ -381,7 +384,12 @@ class DatabaseManager {
   public async getProducts(): Promise<Product[]> {
     if (this.isPostgresActive && this.pool) {
       try {
-        const res = await this.pool.query("SELECT * FROM products ORDER BY name ASC");
+        const res = await this.pool.query(`
+          SELECT p.*, m.location as merchant_location 
+          FROM products p 
+          LEFT JOIN merchants m ON p.merchant_email = m.email 
+          ORDER BY p.name ASC
+        `);
         return res.rows.map(row => ({
           id: row.id,
           name: row.name,
@@ -397,13 +405,20 @@ class DatabaseManager {
           isTrending: row.is_trending,
           merchantBrand: row.merchant_brand || undefined,
           merchantEmail: row.merchant_email || undefined,
+          merchantLocation: row.merchant_location || "US",
           isDigital: !!row.is_digital
         }));
       } catch (err) {
         console.error("PG query products failed, using memory default", err);
       }
     }
-    return this.localDb.products;
+    return this.localDb.products.map(p => {
+      const merchant = this.localDb.merchants.find(m => m.email === p.merchantEmail);
+      return {
+        ...p,
+        merchantLocation: merchant?.location || "US"
+      };
+    });
   }
 
   // 2. CART ITEMS
@@ -798,6 +813,7 @@ class DatabaseManager {
             brandName: res.rows[0].brand_name,
             description: res.rows[0].description,
             logoUrl: res.rows[0].logo_url || undefined,
+            location: res.rows[0].location || "US",
             createdAt: res.rows[0].created_at
           };
         }
@@ -814,20 +830,26 @@ class DatabaseManager {
         brandName: match.brand_name,
         description: match.description,
         logoUrl: match.logo_url,
+        location: match.location || "US",
         createdAt: match.created_at
       };
     }
     return null;
   }
 
-  public async registerMerchant(email: string, brandName: string, description: string, logoUrl?: string) {
+  public async registerMerchant(email: string, brandName: string, description: string, logoUrl?: string, location?: string) {
+    const finalLoc = location || "US";
     if (this.isPostgresActive && this.pool) {
       try {
         await this.pool.query(
-          `INSERT INTO merchants (email, brand_name, description, logo_url)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT (email) DO UPDATE SET brand_name = EXCLUDED.brand_name, description = EXCLUDED.description, logo_url = COALESCE(EXCLUDED.logo_url, merchants.logo_url)`,
-          [email, brandName, description, logoUrl || null]
+          `INSERT INTO merchants (email, brand_name, description, logo_url, location)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (email) DO UPDATE SET 
+             brand_name = EXCLUDED.brand_name, 
+             description = EXCLUDED.description, 
+             logo_url = COALESCE(EXCLUDED.logo_url, merchants.logo_url),
+             location = COALESCE(EXCLUDED.location, merchants.location)`,
+          [email, brandName, description, logoUrl || null, finalLoc]
         );
         return { success: true };
       } catch (err) {
@@ -842,12 +864,14 @@ class DatabaseManager {
       if (logoUrl) {
         this.localDb.merchants[matchIdx].logo_url = logoUrl;
       }
+      this.localDb.merchants[matchIdx].location = finalLoc;
     } else {
       this.localDb.merchants.push({
         email,
         brand_name: brandName,
         description,
         logo_url: logoUrl,
+        location: finalLoc,
         created_at: new Date().toISOString()
       });
     }
@@ -1143,6 +1167,7 @@ class DatabaseManager {
         brandName,
         description: m.description,
         logoUrl: m.logo_url || m.logoUrl,
+        location: m.location || "US",
         productCount: mProducts.length,
         createdAt: m.created_at || m.createdAt || new Date().toISOString()
       };

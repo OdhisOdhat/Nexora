@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight, Edit2, X, Filter } from "lucide-react";
 import { motion } from "motion/react";
-import { Product } from "../data/products";
+import { Product, MERCHANT_LOCATIONS } from "../data/products";
 
 interface MerchantPortalProps {
   userEmail: string;
@@ -35,7 +35,7 @@ const PRESET_LOGOS = [
 ];
 
 export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPortalProps) {
-  const [merchant, setMerchant] = useState<{ email: string; brandName: string; description: string; logoUrl?: string } | null>(null);
+  const [merchant, setMerchant] = useState<{ email: string; brandName: string; description: string; logoUrl?: string; location?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   // Registration Form States
@@ -43,7 +43,14 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [regBrand, setRegBrand] = useState("");
   const [regDesc, setRegDesc] = useState("");
   const [regLogoUrl, setRegLogoUrl] = useState("");
+  const [regLocation, setRegLocation] = useState("US");
   const [isRegDragging, setIsRegDragging] = useState(false);
+  
+  // Profile settings states
+  const [profileBrand, setProfileBrand] = useState("");
+  const [profileDesc, setProfileDesc] = useState("");
+  const [profileLocation, setProfileLocation] = useState("US");
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   
   // Customizer / Input states
   const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
@@ -171,8 +178,13 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
       if (res.ok) {
         const data = await res.json();
         setMerchant(data);
-        if (data && data.logoUrl) {
-          setLogoUrlInput(data.logoUrl);
+        if (data) {
+          if (data.logoUrl) {
+            setLogoUrlInput(data.logoUrl);
+          }
+          setProfileBrand(data.brandName || "");
+          setProfileDesc(data.description || "");
+          setProfileLocation(data.location || "US");
         }
       }
 
@@ -299,7 +311,8 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
           email: regEmail,
           brandName: regBrand,
           description: regDesc,
-          logoUrl: regLogoUrl
+          logoUrl: regLogoUrl,
+          location: regLocation
         })
       });
 
@@ -308,13 +321,51 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
           email: regEmail,
           brandName: regBrand,
           description: regDesc,
-          logoUrl: regLogoUrl
+          logoUrl: regLogoUrl,
+          location: regLocation
         });
         setSuccessMsg("Merchant registration successful!");
         setTimeout(() => setSuccessMsg(""), 4000);
       }
     } catch (err) {
       console.error("Failed to save merchant registration", err);
+    }
+  };
+
+  // Handle Update Merchant Profile Settings
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileBrand.trim() || !merchant) return;
+
+    setIsUpdatingProfile(true);
+    try {
+      const res = await fetch("/api/merchant/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          brandName: profileBrand,
+          description: profileDesc,
+          logoUrl: merchant.logoUrl,
+          location: profileLocation
+        })
+      });
+
+      if (res.ok) {
+        setMerchant({
+          ...merchant,
+          brandName: profileBrand,
+          description: profileDesc,
+          location: profileLocation
+        });
+        setSuccessMsg("Merchant brand profile updated successfully!");
+        onProductAdded(); // Trigger parent catalog update to convert product prices dynamically
+        setTimeout(() => setSuccessMsg(""), 4500);
+      }
+    } catch (err) {
+      console.error("Failed to update merchant profile settings", err);
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -477,6 +528,25 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-mono text-gray-400 uppercase tracking-widest mb-1.5" htmlFor="merchant-location-select">
+                  Merchant Node Base Location & Currency
+                </label>
+                <select
+                  id="merchant-location-select"
+                  value={regLocation}
+                  onChange={(e) => setRegLocation(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all duration-200"
+                >
+                  {Object.entries(MERCHANT_LOCATIONS).map(([code, details]) => (
+                    <option key={code} value={code} className="bg-slate-900 text-white">
+                      {details.flag} {details.name} ({details.code} - {details.symbol})
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-gray-500 mt-1 block">Your storefront's primary currency node is determined by this location.</span>
+              </div>
+
               {/* Set Initial Brand Logo */}
               <div className="space-y-3 pt-2">
                 <label className="block text-xs font-mono text-gray-400 uppercase tracking-widest">
@@ -565,14 +635,82 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                     <Store className="w-6 h-6 text-purple-400" />
                   </div>
                 )}
-                <div>
-                  <h3 className="font-bold text-white text-sm tracking-wide uppercase font-mono">{merchant.brandName}</h3>
-                  <span className="text-[10px] text-gray-400 block">{merchant.email}</span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-white text-sm tracking-wide uppercase font-mono truncate">{merchant.brandName}</h3>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] text-gray-400 font-mono truncate max-w-[130px]" title={merchant.email}>{merchant.email}</span>
+                    <span className="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[8px] font-bold shrink-0 flex items-center gap-0.5">
+                      {MERCHANT_LOCATIONS[merchant.location || "US"]?.flag} {MERCHANT_LOCATIONS[merchant.location || "US"]?.code}
+                    </span>
+                  </div>
                 </div>
               </div>
               <p className="text-xs text-gray-400 italic bg-white/[0.02] p-3 rounded-xl border border-white/[0.02]">
                 "{merchant.description || "Decentralized Nexora partner shop listing standard bespoke products."}"
               </p>
+            </div>
+
+            {/* Brand Storefront Settings */}
+            <div className="bg-slate-900/60 backdrop-blur-md border border-white/[0.04] p-6 rounded-3xl space-y-4">
+              <h3 className="font-sans font-bold text-sm text-white flex items-center gap-2">
+                <Store className="w-4 h-4 text-purple-400" /> Storefront Node & Currency
+              </h3>
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="profile-brand-input">
+                    Brand Name
+                  </label>
+                  <input
+                    id="profile-brand-input"
+                    type="text"
+                    required
+                    value={profileBrand}
+                    onChange={(e) => setProfileBrand(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="profile-desc-textarea">
+                    Storefront Description
+                  </label>
+                  <textarea
+                    id="profile-desc-textarea"
+                    rows={2}
+                    value={profileDesc}
+                    onChange={(e) => setProfileDesc(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="profile-location-select">
+                    Storefront Location Node
+                  </label>
+                  <select
+                    id="profile-location-select"
+                    value={profileLocation}
+                    onChange={(e) => setProfileLocation(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-xs focus:outline-none"
+                  >
+                    {Object.entries(MERCHANT_LOCATIONS).map(([code, details]) => (
+                      <option key={code} value={code} className="bg-slate-900 text-white">
+                        {details.flag} {details.name} ({details.code})
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[9px] text-gray-500 mt-1 block">Updating shifts listed items' native currency to match this location!</span>
+                </div>
+
+                <button
+                  id="profile-update-btn"
+                  type="submit"
+                  disabled={isUpdatingProfile}
+                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold font-mono uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {isUpdatingProfile ? "Syncing Profile..." : <><Check className="w-3.5 h-3.5" /> Save Store Settings</>}
+                </button>
+              </form>
             </div>
 
             {/* Brand Logo Customizer */}

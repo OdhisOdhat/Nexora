@@ -1,7 +1,7 @@
 import React from "react";
 import { Heart, Star, ShoppingCart, Eye } from "lucide-react";
 import { motion } from "motion/react";
-import { Product } from "../data/products";
+import { Product, MERCHANT_LOCATIONS } from "../data/products";
 
 interface ProductCardProps {
   key?: string | number;
@@ -10,6 +10,7 @@ interface ProductCardProps {
   onSelectProduct: (p: Product) => void;
   onToggleWishlist: (p: Product) => void;
   isWishlisted: boolean;
+  currency?: string;
 }
 
 export default function ProductCard({
@@ -17,8 +18,22 @@ export default function ProductCard({
   onAddToCart,
   onSelectProduct,
   onToggleWishlist,
-  isWishlisted
+  isWishlisted,
+  currency = "USD"
 }: ProductCardProps) {
+
+  const formatPrice = (priceUSD: number, merchantLoc?: string) => {
+    let targetCurrencyCode = currency;
+    if (currency === "LOCAL") {
+      const loc = merchantLoc || "US";
+      const locInfo = MERCHANT_LOCATIONS[loc] || MERCHANT_LOCATIONS.US;
+      targetCurrencyCode = locInfo.code;
+    }
+
+    const info = Object.values(MERCHANT_LOCATIONS).find(m => m.code === targetCurrencyCode) || MERCHANT_LOCATIONS.US;
+    const converted = priceUSD * info.rate;
+    return `${info.symbol}${converted.toFixed(2)}`;
+  };
   
   const discountRate = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
@@ -96,7 +111,7 @@ export default function ProductCard({
       {/* Product metadata block */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-1.5">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-mono font-bold tracking-widest text-nexora-primary uppercase">
                 {product.category}
@@ -107,15 +122,25 @@ export default function ProductCard({
                 </span>
               )}
             </div>
-            {product.merchantBrand && (
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold max-w-[124px] truncate" title={`Sold by ${product.merchantBrand}`}>
-                ⚡ {product.merchantBrand}
-              </span>
-            )}
+            <div className="flex items-center gap-1">
+              {product.merchantBrand && (
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold max-w-[100px] truncate" title={`Sold by ${product.merchantBrand}`}>
+                  ⚡ {product.merchantBrand}
+                </span>
+              )}
+              {product.merchantLocation && (
+                <span 
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] text-gray-400 font-mono text-[9px] font-bold shrink-0 flex items-center gap-0.5 border border-white/[0.02]" 
+                  title={`Store node location: ${MERCHANT_LOCATIONS[product.merchantLocation]?.name || product.merchantLocation}`}
+                >
+                  {MERCHANT_LOCATIONS[product.merchantLocation]?.flag || "📍"} {MERCHANT_LOCATIONS[product.merchantLocation]?.code || product.merchantLocation}
+                </span>
+              )}
+            </div>
           </div>
           <h4 
             onClick={() => onSelectProduct(product)}
-            className="font-bold text-sm text-white line-clamp-1 mt-1 hover:text-nexora-primary cursor-pointer transition-colors"
+            className="font-bold text-sm text-white line-clamp-1 mt-1.5 hover:text-nexora-primary cursor-pointer transition-colors"
           >
             {product.name}
           </h4>
@@ -129,11 +154,11 @@ export default function ProductCard({
           <div>
             <div className="flex items-baseline gap-1.5">
               <span className="font-mono font-bold text-base text-purple-200">
-                ${product.price ? product.price.toFixed(2) : ""}
+                {formatPrice(product.price, product.merchantLocation)}
               </span>
               {product.originalPrice && (
                 <span className="font-mono text-xs text-gray-500 line-through">
-                  ${product.originalPrice.toFixed(2)}
+                  {formatPrice(product.originalPrice, product.merchantLocation)}
                 </span>
               )}
             </div>

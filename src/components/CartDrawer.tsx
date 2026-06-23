@@ -2,6 +2,7 @@ import { X, Trash2, ChevronRight, ShoppingCart, Lock, ShieldCheck, CheckCircle2,
 import { motion, AnimatePresence } from "motion/react";
 import React, { useState } from "react";
 import { CartItem } from "../types";
+import { MERCHANT_LOCATIONS } from "../data/products";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CartDrawerProps {
   onRemoveItem: (id: string) => void;
   onClearCart: () => void;
   isPrimeUser: boolean;
+  currency?: string;
 }
 
 export default function CartDrawer({
@@ -20,8 +22,20 @@ export default function CartDrawer({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
-  isPrimeUser
+  isPrimeUser,
+  currency = "USD"
 }: CartDrawerProps) {
+
+  const formatPrice = (priceUSD: number) => {
+    let targetCurrencyCode = currency;
+    if (currency === "LOCAL") {
+      targetCurrencyCode = "USD"; // Fallback unified currency for general basket totals
+    }
+
+    const info = Object.values(MERCHANT_LOCATIONS).find(m => m.code === targetCurrencyCode) || MERCHANT_LOCATIONS.US;
+    const converted = priceUSD * info.rate;
+    return `${info.symbol}${converted.toFixed(2)}`;
+  };
   
   // Checkout flow state parameters
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "shipping" | "success">("cart");
@@ -371,7 +385,7 @@ export default function CartDrawer({
                             </button>
                           </div>
                           <span className="text-xs font-mono font-bold text-purple-200">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            {formatPrice(item.price * item.quantity)}
                           </span>
                         </div>
                       </div>
@@ -389,7 +403,7 @@ export default function CartDrawer({
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between text-gray-400">
                         <span>Basket Subtotal:</span>
-                        <span className="font-mono text-white">${subtotal.toFixed(2)}</span>
+                        <span className="font-mono text-white">{formatPrice(subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-gray-400 items-center">
                         <div className="flex items-center gap-1.5">
@@ -401,20 +415,20 @@ export default function CartDrawer({
                           )}
                         </div>
                         <span className="font-mono text-white">
-                          {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                          {shipping === 0 ? "FREE" : formatPrice(shipping)}
                         </span>
                       </div>
                       {!isShippingFree && (
                         <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
                           <Truck className="w-3.5 h-3.5" />
-                          <span>Add <span className="font-bold text-nexora-primary">${(50 - subtotal).toFixed(2)}</span> more for FREE shipping</span>
+                          <span>Add <span className="font-bold text-nexora-primary">{formatPrice(50 - subtotal)}</span> more for FREE shipping</span>
                         </div>
                       )}
                     </div>
 
                     <div className="border-t border-white/[0.04] pt-3.5 flex justify-between items-baseline">
                       <span className="text-xs font-semibold text-gray-300">Estimated Total:</span>
-                      <span className="text-lg font-mono font-bold text-purple-200">${grandTotal.toFixed(2)}</span>
+                      <span className="text-lg font-mono font-bold text-purple-200">{formatPrice(grandTotal)}</span>
                     </div>
 
                     <button

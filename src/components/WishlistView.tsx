@@ -10,6 +10,7 @@ interface WishlistViewProps {
   setSelectedProduct: (product: Product) => void;
   handleToggleWishlist: (product: Product) => void;
   setCurrentSection: (section: any) => void;
+  currency?: string;
 }
 
 export default function WishlistView({
@@ -18,7 +19,8 @@ export default function WishlistView({
   handleAddToCart,
   setSelectedProduct,
   handleToggleWishlist,
-  setCurrentSection
+  setCurrentSection,
+  currency = "USD"
 }: WishlistViewProps) {
   const wishlistedProducts = productsList.filter(p => wishlist.includes(p.id));
 
@@ -52,6 +54,7 @@ export default function WishlistView({
               onSelectProduct={(p) => setSelectedProduct(p)}
               onToggleWishlist={handleToggleWishlist}
               isWishlisted={true}
+              currency={currency}
             />
           ))}
         </div>

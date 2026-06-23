@@ -1,3 +1,21 @@
+export interface CurrencyInfo {
+  code: string;
+  symbol: string;
+  name: string;
+  flag: string;
+  rate: number;
+}
+
+export const MERCHANT_LOCATIONS: Record<string, CurrencyInfo> = {
+  US: { code: "USD", symbol: "$", name: "United States (USD)", flag: "🇺🇸", rate: 1.0 },
+  UK: { code: "GBP", symbol: "£", name: "United Kingdom (GBP)", flag: "🇬🇧", rate: 0.79 },
+  EU: { code: "EUR", symbol: "€", name: "European Union (EUR)", flag: "🇪🇺", rate: 0.92 },
+  JP: { code: "JPY", symbol: "¥", name: "Japan (JPY)", flag: "🇯🇵", rate: 155.0 },
+  KE: { code: "KES", symbol: "KSh", name: "Kenya (KES)", flag: "🇰🇪", rate: 130.0 },
+  CA: { code: "CAD", symbol: "C$", name: "Canada (CAD)", flag: "🇨🇦", rate: 1.37 },
+  AU: { code: "AUD", symbol: "A$", name: "Australia (AUD)", flag: "🇦🇺", rate: 1.50 }
+};
+
 export interface Product {
   id: string;
   name: string;
@@ -13,6 +31,7 @@ export interface Product {
   isTrending?: boolean;
   merchantBrand?: string;
   merchantEmail?: string;
+  merchantLocation?: string;
   isDigital?: boolean;
 }
 

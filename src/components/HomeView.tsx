@@ -40,6 +40,7 @@ interface HomeViewProps {
   setSubscribeEmail: React.Dispatch<React.SetStateAction<string>>;
   subscribeStatus: string;
   handleSubscribe: (e: React.FormEvent) => void;
+  currency?: string;
 }
 
 export default function HomeView({
@@ -60,6 +61,7 @@ export default function HomeView({
   setSubscribeEmail,
   subscribeStatus,
   handleSubscribe,
+  currency = "USD"
 }: HomeViewProps) {
   return (
     <>
@@ -185,6 +187,7 @@ export default function HomeView({
                 onSelectProduct={(p) => setSelectedProduct(p)}
                 onToggleWishlist={handleToggleWishlist}
                 isWishlisted={wishlist.includes(p.id)}
+                currency={currency}
               />
             ))}
           </div>
@@ -305,6 +308,7 @@ export default function HomeView({
               onSelectProduct={(p) => setSelectedProduct(p)}
               onToggleWishlist={handleToggleWishlist}
               isWishlisted={wishlist.includes(p.id)}
+              currency={currency}
             />
           ))}
         </div>
