@@ -306,7 +306,7 @@ app.post("/api/admin/update-delivery", async (req, res) => {
 // API Endpoint: Add a product from a merchant (ware)
 app.post("/api/merchant/product", async (req, res) => {
   try {
-    const { name, category, price, description, image, merchantBrand, merchantEmail, isDigital, tag } = req.body;
+    const { name, category, price, description, image, merchantBrand, merchantEmail, isDigital, tag, subCategory } = req.body;
     if (!name || !category || !price || !merchantBrand || !merchantEmail) {
       res.status(400).json({ error: "Required product fields are missing." });
       return;
@@ -322,7 +322,8 @@ app.post("/api/merchant/product", async (req, res) => {
       merchantBrand,
       merchantEmail,
       !!isDigital,
-      tag || "Merchant Spec"
+      tag || "Merchant Spec",
+      subCategory
     );
     res.json(result);
   } catch (err: any) {
@@ -348,7 +349,7 @@ app.post("/api/merchant/product/update-price", async (req, res) => {
 // API Endpoint: Update merchant product details (including category, isDigital, tag, name, description)
 app.post("/api/merchant/product/update", async (req, res) => {
   try {
-    const { id, email, name, category, price, description, isDigital, tag } = req.body;
+    const { id, email, name, category, price, description, isDigital, tag, subCategory } = req.body;
     if (!id || !email || !name || !category || price === undefined) {
       res.status(400).json({ error: "Missing required properties for product update." });
       return;
@@ -361,7 +362,8 @@ app.post("/api/merchant/product/update", async (req, res) => {
       parseFloat(price),
       description || "",
       !!isDigital,
-      tag || "Merchant Spec"
+      tag || "Merchant Spec",
+      subCategory
     );
     res.json(result);
   } catch (err: any) {

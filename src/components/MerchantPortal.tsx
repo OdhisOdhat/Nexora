@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight, Edit2, X, Filter } from "lucide-react";
 import { motion } from "motion/react";
-import { Product, MERCHANT_LOCATIONS } from "../data/products";
+import { Product, MERCHANT_LOCATIONS, CATEGORY_SUBCATEGORIES } from "../data/products";
 
 interface MerchantPortalProps {
   userEmail: string;
@@ -60,6 +60,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   // Add Product Form States
   const [prodName, setProdName] = useState("");
   const [prodCategory, setProdCategory] = useState("Electronics");
+  const [prodSubCategory, setProdSubCategory] = useState("");
   const [prodPrice, setProdPrice] = useState("");
   const [prodDesc, setProdDesc] = useState("");
   const [prodImage, setProdImage] = useState(PRESET_IMAGES[2].url); // Prefer high-tech image by default
@@ -68,6 +69,12 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [prodIsPremium, setProdIsPremium] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Set default subcategory when prodCategory changes
+  useEffect(() => {
+    const subs = CATEGORY_SUBCATEGORIES[prodCategory] || [];
+    setProdSubCategory(subs[0] || "");
+  }, [prodCategory]);
 
   // Auto detect digital format if Digital Art selected
   useEffect(() => {
@@ -81,7 +88,16 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState<string>("");
   const [editCategoryValue, setEditCategoryValue] = useState<string>("Electronics");
+  const [editSubCategoryValue, setEditSubCategoryValue] = useState<string>("");
   const [editPriceValue, setEditPriceValue] = useState<string>("");
+
+  // Set default subcategory when editCategoryValue changes
+  useEffect(() => {
+    const subs = CATEGORY_SUBCATEGORIES[editCategoryValue] || [];
+    if (!subs.includes(editSubCategoryValue)) {
+      setEditSubCategoryValue(subs[0] || "");
+    }
+  }, [editCategoryValue]);
   const [editDescValue, setEditDescValue] = useState<string>("");
   const [editIsDigitalValue, setEditIsDigitalValue] = useState<boolean>(false);
   const [editIsPremiumValue, setEditIsPremiumValue] = useState<boolean>(false);
@@ -103,6 +119,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
     setEditingProductId(p.id);
     setEditNameValue(p.name);
     setEditCategoryValue(p.category || "Electronics");
+    setEditSubCategoryValue(p.subCategory || "");
     setEditPriceValue(p.price.toString());
     setEditDescValue(p.description || "");
     setEditIsDigitalValue(!!p.isDigital);
@@ -134,7 +151,8 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
           price: parseFloat(editPriceValue),
           description: editDescValue,
           isDigital: editIsDigitalValue,
-          tag: finalTag
+          tag: finalTag,
+          subCategory: editSubCategoryValue
         })
       });
 
@@ -144,6 +162,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
         // Clear edit state
         setEditNameValue("");
         setEditCategoryValue("Electronics");
+        setEditSubCategoryValue("");
         setEditPriceValue("");
         setEditDescValue("");
         setEditIsDigitalValue(false);
@@ -384,6 +403,7 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
         body: JSON.stringify({
           name: prodName,
           category: prodCategory,
+          subCategory: prodSubCategory,
           price: parseFloat(prodPrice),
           description: prodDesc || (prodIsDigital ? "Exclusive High-Fidelity premium digital art collectible. Authenticated artist signature & secure cloud node download." : "High-tech premium product offered by our customized merchant brand."),
           image: prodImage,
@@ -838,20 +858,36 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="product-price-input">
-                      Price (USD)
+                    <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="product-subcategory-picker">
+                      Subcategory
                     </label>
-                    <input
-                      id="product-price-input"
-                      type="number"
-                      step="0.01"
-                      required
-                      placeholder="99.99"
-                      value={prodPrice}
-                      onChange={(e) => setProdPrice(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-xs focus:outline-none transition-all duration-150"
-                    />
+                    <select
+                      id="product-subcategory-picker"
+                      value={prodSubCategory}
+                      onChange={(e) => setProdSubCategory(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-lg bg-slate-950/85 border border-white/[0.08] text-white text-xs focus:outline-none transition-all duration-150"
+                    >
+                      {(CATEGORY_SUBCATEGORIES[prodCategory] || []).map(sub => (
+                        <option key={sub} value={sub}>{sub}</option>
+                      ))}
+                    </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1" htmlFor="product-price-input">
+                    Price (USD)
+                  </label>
+                  <input
+                    id="product-price-input"
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="99.99"
+                    value={prodPrice}
+                    onChange={(e) => setProdPrice(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950/80 border border-white/[0.08] focus:border-purple-500 text-white text-xs focus:outline-none transition-all duration-150"
+                  />
                 </div>
 
                 <div>
@@ -1089,6 +1125,22 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                                       {CATEGORIES_PRESETS.map((cat) => (
                                         <option key={cat} value={cat}>
                                           {cat}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  {/* Product Subcategory */}
+                                  <div>
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Subcategory Class</label>
+                                    <select
+                                      value={editSubCategoryValue}
+                                      onChange={(e) => setEditSubCategoryValue(e.target.value)}
+                                      className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs focus:outline-none"
+                                    >
+                                      {(CATEGORY_SUBCATEGORIES[editCategoryValue] || []).map((sub) => (
+                                        <option key={sub} value={sub}>
+                                          {sub}
                                         </option>
                                       ))}
                                     </select>

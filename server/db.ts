@@ -132,6 +132,7 @@ class DatabaseManager {
               id VARCHAR(50) PRIMARY KEY,
               name VARCHAR(255) NOT NULL,
               category VARCHAR(100) NOT NULL,
+              sub_category VARCHAR(100),
               price DECIMAL(10, 2) NOT NULL,
               original_price DECIMAL(10, 2),
               rating DECIMAL(3, 2) DEFAULT 4.5,
@@ -214,6 +215,9 @@ class DatabaseManager {
         await client.query(`
           ALTER TABLE products ADD COLUMN IF NOT EXISTS is_digital BOOLEAN DEFAULT FALSE;
         `);
+        await client.query(`
+          ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_category VARCHAR(100);
+        `);
 
         // Create merchants table
         await client.query(`
@@ -267,12 +271,13 @@ class DatabaseManager {
           console.log("📊 Seeding products into PostgreSQL database...");
           for (const p of PRODUCTS) {
             await client.query(
-              `INSERT INTO products (id, name, category, price, original_price, rating, rating_count, description, image, tag, is_featured, is_trending)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+              `INSERT INTO products (id, name, category, sub_category, price, original_price, rating, rating_count, description, image, tag, is_featured, is_trending)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
               [
                 p.id,
                 p.name,
                 p.category,
+                p.subCategory || null,
                 p.price,
                 p.originalPrice || null,
                 p.rating,
@@ -394,6 +399,7 @@ class DatabaseManager {
           id: row.id,
           name: row.name,
           category: row.category,
+          subCategory: row.sub_category || undefined,
           price: parseFloat(row.price),
           originalPrice: row.original_price ? parseFloat(row.original_price) : undefined,
           rating: parseFloat(row.rating),
@@ -912,14 +918,15 @@ class DatabaseManager {
     merchantBrand: string,
     merchantEmail: string,
     isDigital: boolean = false,
-    tag: string = "Merchant Spec"
+    tag: string = "Merchant Spec",
+    subCategory?: string
   ) {
     if (this.isPostgresActive && this.pool) {
       try {
         await this.pool.query(
-          `INSERT INTO products (id, name, category, price, description, image, rating, rating_count, merchant_brand, merchant_email, is_digital, tag)
-           VALUES ($1, $2, $3, $4, $5, $6, 4.5, 1, $7, $8, $9, $10)`,
-          [id, name, category, price, description, image, merchantBrand, merchantEmail, isDigital, tag]
+          `INSERT INTO products (id, name, category, sub_category, price, description, image, rating, rating_count, merchant_brand, merchant_email, is_digital, tag)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 4.5, 1, $8, $9, $10, $11)`,
+          [id, name, category, subCategory || null, price, description, image, merchantBrand, merchantEmail, isDigital, tag]
         );
         return { success: true };
       } catch (err) {
@@ -933,6 +940,7 @@ class DatabaseManager {
       id,
       name,
       category,
+      subCategory,
       price,
       rating: 4.5,
       ratingCount: 1,
@@ -980,15 +988,16 @@ class DatabaseManager {
     price: number,
     description: string,
     isDigital: boolean,
-    tag: string
+    tag: string,
+    subCategory?: string
   ) {
     if (this.isPostgresActive && this.pool) {
       try {
         const result = await this.pool.query(
           `UPDATE products 
-           SET name = $1, category = $2, price = $3, description = $4, is_digital = $5, tag = $6 
-           WHERE id = $7 AND merchant_email = $8`,
-          [name, category, price, description, isDigital, tag, id, merchantEmail]
+           SET name = $1, category = $2, price = $3, description = $4, is_digital = $5, tag = $6, sub_category = $7 
+           WHERE id = $8 AND merchant_email = $9`,
+          [name, category, price, description, isDigital, tag, subCategory || null, id, merchantEmail]
         );
         return { success: (result.rowCount ? result.rowCount > 0 : false) };
       } catch (err) {
@@ -1003,6 +1012,7 @@ class DatabaseManager {
         ...this.localDb.products[matchIdx],
         name,
         category,
+        subCategory,
         price,
         description,
         isDigital,

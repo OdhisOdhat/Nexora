@@ -56,6 +56,11 @@ export default function App() {
   // Navigation Routing States
   const [currentSection, setCurrentSection] = useState<Section>("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("All");
+
+  useEffect(() => {
+    setSelectedSubCategory("All");
+  }, [selectedCategory]);
 
   // Dynamic Authenticated User State
   const [user, setUser] = useState<{
@@ -382,7 +387,7 @@ export default function App() {
   };
 
   // Safe category filter matching list matches
-  const categoriesList = ["All", "Electronics", "Sports", "Home & Living", "Beauty", "Fashion", "Digital Art"];
+  const categoriesList = ["All", "Electronics", "Sports", "Home & Living", "Beauty", "Lifestyle", "Fashion", "Digital Art"];
 
   // Perform search and filter calculations
   const filteredProducts = useMemo(() => {
@@ -392,13 +397,17 @@ export default function App() {
       const matchesSearch = query === "" || 
         product.name.toLowerCase().includes(query) || 
         product.category.toLowerCase().includes(query) || 
+        (product.subCategory && product.subCategory.toLowerCase().includes(query)) ||
         product.description.toLowerCase().includes(query) ||
         (product.merchantBrand && product.merchantBrand.toLowerCase().includes(query));
 
       // 2. Category check
       const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
 
-      // 3. Page specific filters checks
+      // 3. Subcategory check
+      const matchesSubCategory = selectedSubCategory === "All" || product.subCategory === selectedSubCategory;
+
+      // 4. Page specific filters checks
       let matchesPage = true;
       if (currentSection === "deals") {
         matchesPage = !!product.originalPrice;
@@ -409,9 +418,9 @@ export default function App() {
         matchesPage = true;
       }
 
-      return matchesSearch && matchesCategory && matchesPage;
+      return matchesSearch && matchesCategory && matchesSubCategory && matchesPage;
     });
-  }, [searchQuery, selectedCategory, currentSection, productsList]);
+  }, [searchQuery, selectedCategory, selectedSubCategory, currentSection, productsList]);
 
   // Derived featured list outputs
   const featuredProducts = useMemo(() => {
@@ -538,6 +547,8 @@ export default function App() {
               categoriesList={categoriesList}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
+              selectedSubCategory={selectedSubCategory}
+              setSelectedSubCategory={setSelectedSubCategory}
               filteredProducts={filteredProducts}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

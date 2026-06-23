@@ -20,6 +20,7 @@ export interface Product {
   id: string;
   name: string;
   category: string;
+  subCategory?: string;
   price: number;
   originalPrice?: number;
   rating: number;
@@ -35,11 +36,22 @@ export interface Product {
   isDigital?: boolean;
 }
 
+export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
+  "Electronics": ["Wearables", "Audio", "Smart Home", "Accessories"],
+  "Sports": ["Footwear", "Apparel", "Gear", "Fitness"],
+  "Home & Living": ["Lighting", "Furniture", "Appliances", "Kitchen"],
+  "Beauty": ["Fragrance", "Skincare", "Cosmetics", "Personal Care"],
+  "Lifestyle": ["Travel", "Wellness", "Daily Essentials", "Gifts"],
+  "Fashion": ["Men", "Women", "Children", "Babies"],
+  "Digital Art": ["Murals", "Holograms", "Concept Art", "Generative"]
+};
+
 export const PRODUCTS: Product[] = [
   {
     id: "watch-pro",
     name: "Nexora Smart Watch Pro",
     category: "Electronics",
+    subCategory: "Wearables",
     price: 199.99,
     originalPrice: 249.99,
     rating: 4.8,
@@ -53,6 +65,7 @@ export const PRODUCTS: Product[] = [
     id: "shoes-vortex",
     name: "Vortex Running Shoes",
     category: "Sports",
+    subCategory: "Footwear",
     price: 129.99,
     originalPrice: 159.99,
     rating: 4.6,
@@ -66,6 +79,7 @@ export const PRODUCTS: Product[] = [
     id: "lamp-luma",
     name: "Luma Desk Lamp",
     category: "Home & Living",
+    subCategory: "Lighting",
     price: 89.99,
     originalPrice: 119.99,
     rating: 4.7,
@@ -79,6 +93,7 @@ export const PRODUCTS: Product[] = [
     id: "perfume-eternal",
     name: "Eternal Essence Perfume",
     category: "Beauty",
+    subCategory: "Fragrance",
     price: 59.99,
     originalPrice: 89.99,
     rating: 4.5,
@@ -92,6 +107,7 @@ export const PRODUCTS: Product[] = [
     id: "audio-earbuds",
     name: "Wireless Earbuds",
     category: "Electronics",
+    subCategory: "Audio",
     price: 79.99,
     rating: 4.5,
     ratingCount: 215,
@@ -103,6 +119,7 @@ export const PRODUCTS: Product[] = [
     id: "gear-backpack",
     name: "Minimal Backpack",
     category: "Fashion",
+    subCategory: "Men",
     price: 49.99,
     rating: 4.6,
     ratingCount: 88,
@@ -114,6 +131,7 @@ export const PRODUCTS: Product[] = [
     id: "home-hub",
     name: "Smart Home Hub",
     category: "Home & Living",
+    subCategory: "Smart Home",
     price: 99.99,
     rating: 4.7,
     ratingCount: 140,
@@ -125,6 +143,7 @@ export const PRODUCTS: Product[] = [
     id: "gear-sunglasses",
     name: "Aviator Sunglasses",
     category: "Fashion",
+    subCategory: "Women",
     price: 59.99,
     rating: 4.4,
     ratingCount: 76,
@@ -133,9 +152,34 @@ export const PRODUCTS: Product[] = [
     isTrending: true
   },
   {
+    id: "fashion-child-hoodie",
+    name: "Kids Adaptive Smart Hoodie",
+    category: "Fashion",
+    subCategory: "Children",
+    price: 69.99,
+    rating: 4.7,
+    ratingCount: 32,
+    description: "Thermal-regulating hoodie with adjustable fiber tensioning, water-resistant outer layers, and safety tracking micro-nodes.",
+    image: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&q=80&w=800",
+    tag: "New"
+  },
+  {
+    id: "fashion-baby-romper",
+    name: "Eco-Weave Intelligent Romper",
+    category: "Fashion",
+    subCategory: "Babies",
+    price: 39.99,
+    rating: 4.9,
+    ratingCount: 15,
+    description: "Ultra-soft premium hypoallergenic organic bamboo fibers with dynamic bio-temperature indicators and quick-change magnetic clasps.",
+    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=800",
+    tag: "Staff Pick"
+  },
+  {
     id: "gear-bottle",
     name: "Hydro Bottle",
     category: "Sports",
+    subCategory: "Gear",
     price: 34.99,
     rating: 4.6,
     ratingCount: 198,
@@ -147,6 +191,7 @@ export const PRODUCTS: Product[] = [
     id: "gear-chair",
     name: "Aura Gaming Chair",
     category: "Sports",
+    subCategory: "Fitness",
     price: 299.99,
     originalPrice: 349.99,
     rating: 4.9,
@@ -159,6 +204,7 @@ export const PRODUCTS: Product[] = [
     id: "key-nova",
     name: "Nova Mechanical Keyboard",
     category: "Electronics",
+    subCategory: "Accessories",
     price: 149.99,
     rating: 4.8,
     ratingCount: 53,
@@ -169,6 +215,7 @@ export const PRODUCTS: Product[] = [
     id: "cook-stellar",
     name: "Stellar Induction Cookware",
     category: "Home & Living",
+    subCategory: "Kitchen",
     price: 189.99,
     rating: 4.6,
     ratingCount: 30,
@@ -179,6 +226,7 @@ export const PRODUCTS: Product[] = [
     id: "art-cyber-mural",
     name: "Neo-Genesis Cyber Mural",
     category: "Digital Art",
+    subCategory: "Murals",
     price: 450.00,
     rating: 4.9,
     ratingCount: 24,
@@ -192,6 +240,7 @@ export const PRODUCTS: Product[] = [
     id: "art-quantum-structure",
     name: "Exo-Spire Holographic Render",
     category: "Digital Art",
+    subCategory: "Holograms",
     price: 250.00,
     rating: 4.8,
     ratingCount: 18,
