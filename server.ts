@@ -345,6 +345,30 @@ app.post("/api/merchant/product/update-price", async (req, res) => {
   }
 });
 
+// API Endpoint: Update merchant product details (including category, isDigital, tag, name, description)
+app.post("/api/merchant/product/update", async (req, res) => {
+  try {
+    const { id, email, name, category, price, description, isDigital, tag } = req.body;
+    if (!id || !email || !name || !category || price === undefined) {
+      res.status(400).json({ error: "Missing required properties for product update." });
+      return;
+    }
+    const result = await db.updateProduct(
+      id,
+      email,
+      name,
+      category,
+      parseFloat(price),
+      description || "",
+      !!isDigital,
+      tag || "Merchant Spec"
+    );
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to update product details.", details: err.message });
+  }
+});
+
 // API Endpoint: User registration
 app.post("/api/auth/register", async (req, res) => {
   try {

@@ -948,6 +948,48 @@ class DatabaseManager {
     return { success: false, error: "Product not located, or unauthorized." };
   }
 
+  public async updateProduct(
+    id: string,
+    merchantEmail: string,
+    name: string,
+    category: string,
+    price: number,
+    description: string,
+    isDigital: boolean,
+    tag: string
+  ) {
+    if (this.isPostgresActive && this.pool) {
+      try {
+        const result = await this.pool.query(
+          `UPDATE products 
+           SET name = $1, category = $2, price = $3, description = $4, is_digital = $5, tag = $6 
+           WHERE id = $7 AND merchant_email = $8`,
+          [name, category, price, description, isDigital, tag, id, merchantEmail]
+        );
+        return { success: (result.rowCount ? result.rowCount > 0 : false) };
+      } catch (err) {
+        console.error("PG update product failed", err);
+        throw err;
+      }
+    }
+
+    const matchIdx = this.localDb.products.findIndex(p => p.id === id && p.merchantEmail === merchantEmail);
+    if (matchIdx !== -1) {
+      this.localDb.products[matchIdx] = {
+        ...this.localDb.products[matchIdx],
+        name,
+        category,
+        price,
+        description,
+        isDigital,
+        tag
+      };
+      this.saveLocalData();
+      return { success: true };
+    }
+    return { success: false, error: "Product not located, or unauthorized to edit." };
+  }
+
   public async registerUser(
     email: string,
     name: string,

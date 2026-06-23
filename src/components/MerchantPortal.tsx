@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight, Edit2, X } from "lucide-react";
+import { Store, Plus, Sparkles, Check, Package, DollarSign, Image as ImageIcon, Tag, ArrowRight, Edit2, X, Filter } from "lucide-react";
 import { motion } from "motion/react";
 import { Product } from "../data/products";
 
@@ -72,27 +72,77 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
 
   const [merchantProducts, setMerchantProducts] = useState<Product[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState<string>("");
+  const [editCategoryValue, setEditCategoryValue] = useState<string>("Electronics");
   const [editPriceValue, setEditPriceValue] = useState<string>("");
-  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
+  const [editDescValue, setEditDescValue] = useState<string>("");
+  const [editIsDigitalValue, setEditIsDigitalValue] = useState<boolean>(false);
+  const [editIsPremiumValue, setEditIsPremiumValue] = useState<boolean>(false);
+  const [editTagValue, setEditTagValue] = useState<string>("Merchant Spec");
+  const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
+  const [merchantCategoryFilter, setMerchantCategoryFilter] = useState<string>("All");
 
-  const handleUpdatePrice = async (productId: string) => {
-    if (!editPriceValue || isNaN(parseFloat(editPriceValue))) return;
-    setIsUpdatingPrice(true);
+  // Dynamic digital/tag adjustment during product editing when editCategoryValue changes
+  useEffect(() => {
+    if (editingProductId) {
+      if (editCategoryValue === "Digital Art") {
+        setEditIsDigitalValue(true);
+        setEditTagValue("Art Canvas");
+      }
+    }
+  }, [editCategoryValue, editingProductId]);
+
+  const startEditing = (p: Product) => {
+    setEditingProductId(p.id);
+    setEditNameValue(p.name);
+    setEditCategoryValue(p.category || "Electronics");
+    setEditPriceValue(p.price.toString());
+    setEditDescValue(p.description || "");
+    setEditIsDigitalValue(!!p.isDigital);
+    const isPremium = !!p.isDigital && (
+      p.tag?.toLowerCase().includes("premium") || 
+      p.tag?.toLowerCase().includes("rare") || 
+      p.tag?.toLowerCase().includes("art")
+    );
+    setEditIsPremiumValue(isPremium);
+    setEditTagValue(p.tag || "Merchant Spec");
+  };
+
+  const handleUpdateProduct = async (productId: string) => {
+    if (!editNameValue || !editPriceValue || isNaN(parseFloat(editPriceValue))) return;
+    setIsUpdatingProduct(true);
+    
+    // Auto premium logic for edit
+    const finalTag = editIsPremiumValue ? "Premium Art" : (editIsDigitalValue ? "Digital Asset" : editTagValue);
+
     try {
-      const res = await fetch("/api/merchant/product/update-price", {
+      const res = await fetch("/api/merchant/product/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: productId,
+          email: userEmail,
+          name: editNameValue,
+          category: editCategoryValue,
           price: parseFloat(editPriceValue),
-          email: userEmail
+          description: editDescValue,
+          isDigital: editIsDigitalValue,
+          tag: finalTag
         })
       });
 
       if (res.ok) {
-        setSuccessMsg("Product price updated successfully!");
+        setSuccessMsg("Product details updated successfully!");
         setEditingProductId(null);
+        // Clear edit state
+        setEditNameValue("");
+        setEditCategoryValue("Electronics");
         setEditPriceValue("");
+        setEditDescValue("");
+        setEditIsDigitalValue(false);
+        setEditIsPremiumValue(false);
+        setEditTagValue("Merchant Spec");
+        
         // Trigger parent state update
         onProductAdded();
         
@@ -106,9 +156,9 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
         setTimeout(() => setSuccessMsg(""), 4000);
       }
     } catch (err) {
-      console.error("Failed to update product price:", err);
+      console.error("Failed to update product details:", err);
     } finally {
-      setIsUpdatingPrice(false);
+      setIsUpdatingProduct(false);
     }
   };
 
@@ -798,81 +848,245 @@ export default function MerchantPortal({ userEmail, onProductAdded }: MerchantPo
                   <p className="text-xs text-gray-500 mt-1">Use the listing form on the left to display wares in the market index!</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-                  {merchantProducts.map((p) => (
-                    <div 
-                      key={p.id}
-                      className="p-3.5 bg-slate-950/40 hover:bg-slate-950/70 rounded-xl border border-white/[0.03] flex items-center justify-between gap-3 transition-colors duration-200"
-                    >
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 rounded-lg overflow-hidden border border-white/[0.05] bg-slate-900 flex-shrink-0">
-                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-xs text-white leading-snug line-clamp-1">{p.name}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[9px] font-bold">
-                              {p.category}
-                            </span>
-                            <span className="text-[10px] text-gray-500 font-mono">ID: {p.id}</span>
-                          </div>
-                        </div>
-                      </div>
+                <div className="space-y-4">
+                  {/* Category Filter Tab Selector */}
+                  <div className="flex flex-wrap gap-1.5 p-1 bg-slate-950/40 rounded-xl border border-white/[0.03] items-center">
+                    <span className="text-[9px] font-mono font-bold text-gray-500 px-2 uppercase tracking-wider flex items-center gap-1 shrink-0">
+                      <Filter className="w-3 h-3 text-purple-400" /> Category Filter:
+                    </span>
+                    {["All", ...CATEGORIES_PRESETS].map((cat) => {
+                      const count = cat === "All" 
+                        ? merchantProducts.length 
+                        : merchantProducts.filter(item => item.category === cat).length;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setMerchantCategoryFilter(cat)}
+                          className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all duration-200 cursor-pointer border flex items-center gap-1 ${
+                            merchantCategoryFilter === cat
+                              ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-500/10"
+                              : "bg-slate-900/60 text-gray-400 border-white/[0.04] hover:bg-slate-800 hover:text-white"
+                          }`}
+                        >
+                          {cat} <span className="text-[8px] opacity-60">({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {editingProductId === p.id ? (
-                          <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-white/[0.08]">
-                            <span className="text-gray-400 font-mono text-xs">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editPriceValue}
-                              onChange={(e) => setEditPriceValue(e.target.value)}
-                              className="w-16 bg-transparent text-white text-xs font-mono font-bold focus:outline-none"
-                              placeholder="0.00"
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleUpdatePrice(p.id);
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleUpdatePrice(p.id)}
-                              className="p-1 bg-purple-600 hover:bg-purple-500 rounded text-white cursor-pointer"
-                              title="Save Price"
-                            >
-                              <Check className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingProductId(null)}
-                              className="p-1 bg-slate-850 hover:bg-slate-700/80 rounded text-gray-400 cursor-pointer"
-                              title="Cancel"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2.5">
-                            <div className="text-right">
-                              <span className="text-xs font-mono font-bold text-white block">${p.price.toFixed(2)}</span>
-                              <span className="text-[9px] text-emerald-400/90 font-mono font-semibold block uppercase tracking-wider mt-0.5">Listed</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingProductId(p.id);
-                                setEditPriceValue(p.price.toString());
-                              }}
-                              className="p-1.5 bg-white/[0.03] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded-lg border border-white/[0.04] transition-all cursor-pointer"
-                              title="Set Item Price"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                  {merchantProducts.filter(item => merchantCategoryFilter === "All" || item.category === merchantCategoryFilter).length === 0 ? (
+                    <div className="text-center py-10 border border-dashed border-white/[0.05] rounded-xl bg-white/[0.01]">
+                      <Filter className="w-7 h-7 text-gray-600 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400">No wares published under "{merchantCategoryFilter}".</p>
+                      <button
+                        type="button"
+                        onClick={() => setMerchantCategoryFilter("All")}
+                        className="mt-2 text-[10px] text-purple-400 underline font-mono cursor-pointer"
+                      >
+                        Reset filter to display all listed wares
+                      </button>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
+                      {merchantProducts
+                        .filter(item => merchantCategoryFilter === "All" || item.category === merchantCategoryFilter)
+                        .map((p) => (
+                          <div 
+                            key={p.id}
+                            className="p-1 rounded-2xl transition-colors duration-200"
+                          >
+                            {editingProductId === p.id ? (
+                              /* Full Feature Edit Form */
+                              <div className="p-4 bg-slate-950/80 rounded-2xl border border-purple-500/30 space-y-4">
+                                <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
+                                  <h4 className="text-xs font-bold text-purple-300 font-mono flex items-center gap-1.5">
+                                    <Edit2 className="w-3.5 h-3.5 animate-pulse text-purple-400" /> Adjusting Ware: <span className="text-white text-xs">{p.name}</span>
+                                  </h4>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingProductId(null)}
+                                    className="p-1 hover:bg-slate-800 rounded text-gray-400 hover:text-white transition-colors cursor-pointer"
+                                    title="Cancel Editing"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Product Name */}
+                                  <div>
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Ware Name</label>
+                                    <input
+                                      type="text"
+                                      value={editNameValue}
+                                      onChange={(e) => setEditNameValue(e.target.value)}
+                                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs focus:outline-none"
+                                    />
+                                  </div>
+
+                                  {/* Product Price */}
+                                  <div>
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Unit Price (USD)</label>
+                                    <div className="relative">
+                                      <span className="absolute left-3 top-1.5 text-gray-500 font-mono text-xs">$</span>
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        value={editPriceValue}
+                                        onChange={(e) => setEditPriceValue(e.target.value)}
+                                        className="w-full pl-7 pr-3 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs font-mono focus:outline-none"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Product Category */}
+                                  <div>
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Category Class</label>
+                                    <select
+                                      value={editCategoryValue}
+                                      onChange={(e) => setEditCategoryValue(e.target.value)}
+                                      className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs focus:outline-none"
+                                    >
+                                      {CATEGORIES_PRESETS.map((cat) => (
+                                        <option key={cat} value={cat}>
+                                          {cat}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  {/* Category tag */}
+                                  <div>
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Tag Badge</label>
+                                    <input
+                                      type="text"
+                                      value={editTagValue}
+                                      onChange={(e) => setEditTagValue(e.target.value)}
+                                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs focus:outline-none"
+                                      placeholder="Merchant Spec"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                  <label className="block text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">Product Description</label>
+                                  <textarea
+                                    value={editDescValue}
+                                    onChange={(e) => setEditDescValue(e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-white/[0.08] text-white text-xs focus:outline-none h-16 resize-none"
+                                    placeholder="Update description details..."
+                                  />
+                                </div>
+
+                                {/* Digital Attributes */}
+                                <div className="p-3 bg-slate-900/60 rounded-xl border border-white/[0.04] space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-semibold text-gray-200">Digital Product format</span>
+                                      <span className="text-[10px] text-gray-500 font-mono">Instant download format</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={editIsDigitalValue}
+                                        onChange={(e) => setEditIsDigitalValue(e.target.checked)}
+                                        className="sr-only peer"
+                                      />
+                                      <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                    </label>
+                                  </div>
+
+                                  {editIsDigitalValue && (
+                                    <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-semibold text-purple-300 flex items-center gap-1">
+                                          <Sparkles className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                                          Mark as Premium Art
+                                        </span>
+                                        <span className="text-[10px] text-gray-500 font-mono">Apply rare premium metadata styling</span>
+                                      </div>
+                                      <label className="relative inline-flex items-center cursor-pointer select-none">
+                                        <input
+                                          type="checkbox"
+                                          checked={editIsPremiumValue}
+                                          onChange={(e) => setEditIsPremiumValue(e.target.checked)}
+                                          className="sr-only peer"
+                                        />
+                                        <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                                      </label>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.04]">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingProductId(null)}
+                                    className="px-3.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-lg transition-colors cursor-pointer font-semibold"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isUpdatingProduct}
+                                    onClick={() => handleUpdateProduct(p.id)}
+                                    className="px-4 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg transition-colors cursor-pointer font-bold flex items-center gap-1.5"
+                                  >
+                                    {isUpdatingProduct ? (
+                                      "Saving..."
+                                    ) : (
+                                      <>
+                                        <Check className="w-3.5 h-3.5" /> Save Changes
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Read-Only Listing Row */
+                              <div className="p-3.5 bg-slate-950/40 hover:bg-slate-950/70 rounded-xl border border-white/[0.03] flex items-center justify-between gap-3 transition-colors duration-200">
+                                <div className="flex items-center gap-3.5">
+                                  <div className="w-11 h-11 rounded-lg overflow-hidden border border-white/[0.05] bg-slate-900 flex-shrink-0">
+                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-xs text-white leading-snug line-clamp-1">{p.name}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[9px] font-bold">
+                                        {p.category}
+                                      </span>
+                                      {p.isDigital && (
+                                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-mono text-[8px] font-bold">
+                                          Digital
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] text-gray-500 font-mono">ID: {p.id}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2.5 flex-shrink-0">
+                                  <div className="text-right">
+                                    <span className="text-xs font-mono font-bold text-white block">${p.price.toFixed(2)}</span>
+                                    <span className="text-[9px] text-emerald-400/90 font-mono font-semibold block uppercase tracking-wider mt-0.5">Listed</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditing(p)}
+                                    className="p-1.5 bg-white/[0.03] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded-lg border border-white/[0.04] transition-all cursor-pointer"
+                                    title="Edit Product Details"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
