@@ -45,7 +45,7 @@ export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
   "Lifestyle": ["Travel", "Wellness", "Daily Essentials", "Gifts"],
   "Fashion": ["Men", "Women", "Children", "Babies"],
   "Digital Art": ["Murals", "Holograms", "Concept Art", "Generative"],
-  "Vehicles": ["Electric Cars", "Motorcycles", "Hoverpods", "E-Bikes & Scooters", "Drones"]
+  "Vehicles": ["Electric Cars", "Combustion Cars", "Motorcycles", "Bicycles", "Hoverpods", "E-Bikes & Scooters", "Drones"]
 };
 
 export const FASHION_SUBCATEGORY_TYPES: Record<string, string[]> = {
@@ -299,5 +299,30 @@ export const PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=800",
     tag: "Rare Premium",
     isFeatured: true
+  },
+  {
+    id: "vehicle-v8-pursuit",
+    name: "Intercept V8 Classic Coupe",
+    category: "Vehicles",
+    subCategory: "Combustion Cars",
+    price: 85000.00,
+    rating: 4.9,
+    ratingCount: 24,
+    description: "A precision-tuned, high-performance coupe powered by a naturally aspirated 5.0L V8 engine. Classic raw power meets modern suspension and mechanical feedback.",
+    image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&q=80&w=800",
+    tag: "Exclusive",
+    isTrending: true
+  },
+  {
+    id: "vehicle-carbon-trail",
+    name: "Aero-Flow Carbon Gravel Bike",
+    category: "Vehicles",
+    subCategory: "Bicycles",
+    price: 3499.00,
+    rating: 4.8,
+    ratingCount: 19,
+    description: "Ultra-lightweight high-modulus carbon fiber gravel bicycle. Featuring professional-grade 12-speed manual gear shifters, hydraulic disc brakes, and tubeless all-terrain tires.",
+    image: "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?auto=format&fit=crop&q=80&w=800",
+    tag: "Staff Pick"
   }
 ];
