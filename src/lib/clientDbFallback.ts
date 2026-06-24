@@ -444,7 +444,7 @@ export const clientDb = {
     }
   },
 
-  registerUser(email: string, name: string, password: string, role: "customer" | "merchant" | "rider", locality?: string, brandName?: string) {
+  registerUser(email: string, name: string, password: string, role: "customer" | "merchant" | "rider" | "admin", locality?: string, brandName?: string) {
     try {
       const allUsers = JSON.parse(localStorage.getItem("nexora_local_users") || "[]");
       const exists = allUsers.some((u: any) => u.email === email);

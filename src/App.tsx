@@ -58,6 +58,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("All");
   const [selectedSubCategoryType, setSelectedSubCategoryType] = useState<string>("All");
+  const [maxPriceFilter, setMaxPriceFilter] = useState<number>(30000);
 
   useEffect(() => {
     setSelectedSubCategory("All");
@@ -71,7 +72,7 @@ export default function App() {
   const [user, setUser] = useState<{
     email: string;
     name: string;
-    role: "customer" | "merchant" | "rider";
+    role: "customer" | "merchant" | "rider" | "admin";
     locality?: string;
     brandName?: string;
   } | null>(() => {
@@ -98,6 +99,8 @@ export default function App() {
       setCurrentSection("rider-portal");
     } else if (authUser.role === "merchant") {
       setCurrentSection("merchant-portal");
+    } else if (authUser.role === "admin") {
+      setCurrentSection("admin-panel");
     } else {
       setCurrentSection("home");
     }
@@ -415,6 +418,9 @@ export default function App() {
       // 3.5 Subcategory Type check
       const matchesSubCategoryType = selectedSubCategoryType === "All" || product.subCategoryType === selectedSubCategoryType;
 
+      // 3.7 Price Filter check
+      const matchesPrice = product.price <= maxPriceFilter;
+
       // 4. Page specific filters checks
       let matchesPage = true;
       if (currentSection === "deals") {
@@ -426,9 +432,9 @@ export default function App() {
         matchesPage = true;
       }
 
-      return matchesSearch && matchesCategory && matchesSubCategory && matchesSubCategoryType && matchesPage;
+      return matchesSearch && matchesCategory && matchesSubCategory && matchesSubCategoryType && matchesPage && matchesPrice;
     });
-  }, [searchQuery, selectedCategory, selectedSubCategory, selectedSubCategoryType, currentSection, productsList]);
+  }, [searchQuery, selectedCategory, selectedSubCategory, selectedSubCategoryType, currentSection, productsList, maxPriceFilter]);
 
   // Derived featured list outputs
   const featuredProducts = useMemo(() => {
@@ -567,6 +573,8 @@ export default function App() {
               handleToggleWishlist={handleToggleWishlist}
               wishlist={wishlist}
               currency={currency}
+              maxPriceFilter={maxPriceFilter}
+              setMaxPriceFilter={setMaxPriceFilter}
             />
           ) : currentSection === "collections" ? (
             <CollectionsView

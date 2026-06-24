@@ -1,5 +1,5 @@
 import React from "react";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { Product, CATEGORY_SUBCATEGORIES, FASHION_SUBCATEGORY_TYPES } from "../data/products";
 import ProductCard from "./ProductCard";
 
@@ -20,6 +20,8 @@ interface BrowseViewProps {
   handleToggleWishlist: (product: Product) => void;
   wishlist: string[];
   currency?: string;
+  maxPriceFilter: number;
+  setMaxPriceFilter: (price: number) => void;
 }
 
 export default function BrowseView({
@@ -38,7 +40,9 @@ export default function BrowseView({
   setSelectedProduct,
   handleToggleWishlist,
   wishlist,
-  currency = "USD"
+  currency = "USD",
+  maxPriceFilter,
+  setMaxPriceFilter
 }: BrowseViewProps) {
   const isDeals = currentSection === "deals";
 
@@ -134,17 +138,67 @@ export default function BrowseView({
         )}
       </div>
 
+      {/* Price Range Slider Filter Panel */}
+      <div className="bg-nexora-surface/40 p-5 rounded-2xl border border-white/[0.04] flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-nexora-primary/10 rounded-xl text-nexora-primary">
+            <SlidersHorizontal className="w-4 h-4" />
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Refine Discovery by Price</h4>
+            <p className="text-[10px] text-gray-500 mt-0.5 font-mono">Set threshold parameters to filter high-grade inventory</p>
+          </div>
+        </div>
+
+        <div className="flex-1 max-w-md flex items-center gap-4">
+          <span className="text-[10px] font-mono font-semibold text-gray-500">$0</span>
+          <div className="flex-1 relative group py-2">
+            <input
+              type="range"
+              min="0"
+              max="30000"
+              step="100"
+              value={maxPriceFilter}
+              onChange={(e) => setMaxPriceFilter(Number(e.target.value))}
+              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-nexora-primary"
+            />
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-900 border border-white/[0.08] text-white text-[10px] font-mono px-2 py-1 rounded shadow-lg pointer-events-none">
+              ${maxPriceFilter.toLocaleString()}
+            </div>
+          </div>
+          <span className="text-[10px] font-mono font-semibold text-gray-500">$30,000</span>
+        </div>
+
+        <div className="flex items-center gap-4 justify-between md:justify-end">
+          <div className="bg-slate-900/60 border border-white/[0.06] rounded-xl px-4 py-2 font-mono text-center">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider block leading-none mb-1">Max Price Limit</span>
+            <span className="text-sm font-bold text-nexora-primary">
+              {maxPriceFilter === 30000 ? "Any Price" : `$${maxPriceFilter.toLocaleString()}`}
+            </span>
+          </div>
+
+          {maxPriceFilter < 30000 && (
+            <button
+              onClick={() => setMaxPriceFilter(30000)}
+              className="px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+            >
+              Reset Slider
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Query list feedback stats output */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-20 bg-nexora-surface/30 rounded-3xl border border-white/[0.04]">
           <Search className="w-14 h-14 text-slate-700 stroke-1 mx-auto mb-4" />
           <h4 className="font-bold text-gray-300">No items detected</h4>
           <p className="text-xs text-gray-500 mt-2 max-w-sm mx-auto">
-            There are no items matching "{searchQuery}" under {selectedCategory} sector.
+            There are no items matching "{searchQuery}" under {selectedCategory} sector or under ${maxPriceFilter.toLocaleString()}.
           </p>
           <button
             id="reset-search-btn"
-            onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+            onClick={() => { setSearchQuery(""); setSelectedCategory("All"); setMaxPriceFilter(30000); }}
             className="mt-6 px-4 py-2.5 bg-slate-900 border border-white/[0.04] hover:text-white rounded-xl text-xs font-semibold text-nexora-primary cursor-pointer"
           >
             Reset Filter Query

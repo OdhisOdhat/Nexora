@@ -28,7 +28,7 @@ interface SidebarProps {
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   isPrimeUser: boolean;
-  userRole?: "customer" | "merchant" | "rider" | null;
+  userRole?: "customer" | "merchant" | "rider" | "admin" | null;
   onSignOut?: () => void;
 }
 
@@ -164,7 +164,7 @@ export default function Sidebar({
         )}
 
         {/* Merchant Suite Partner Link */}
-        {(!userRole || userRole === "merchant") && (
+        {userRole === "merchant" && (
           <div>
             <h4 className="px-4 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-3">Merchant Node</h4>
             <div className="space-y-1">
@@ -191,29 +191,31 @@ export default function Sidebar({
         )}
 
         {/* Admin Suite Section Link */}
-        <div>
-          <h4 className="px-4 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-3">Admin Suite</h4>
-          <div className="space-y-1">
-            {adminNavItems.map((item) => (
-              <button
-                key={item.id}
-                id={`sidebar-nav-${item.id}`}
-                onClick={() => handleNavClick(item.id as Section)}
-                className={navClass(item.id as Section)}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-105 ${currentSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-purple-400'}`} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            ))}
+        {userRole === "admin" && (
+          <div>
+            <h4 className="px-4 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-3">Admin Suite</h4>
+            <div className="space-y-1">
+              {adminNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  id={`sidebar-nav-${item.id}`}
+                  onClick={() => handleNavClick(item.id as Section)}
+                  className={navClass(item.id as Section)}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-105 ${currentSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-purple-400'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Account and profile sections */}
         <div>

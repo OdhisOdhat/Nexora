@@ -40,7 +40,7 @@ interface LocalDbSchema {
     email: string;
     name: string;
     password?: string;
-    role: "customer" | "merchant" | "rider";
+    role: "customer" | "merchant" | "rider" | "admin";
     locality?: string;
     brand_name?: string;
     created_at: string;
@@ -1038,7 +1038,7 @@ class DatabaseManager {
     email: string,
     name: string,
     password: string,
-    role: "customer" | "merchant" | "rider",
+    role: "customer" | "merchant" | "rider" | "admin",
     locality?: string,
     brand_name?: string
   ) {

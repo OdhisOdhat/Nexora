@@ -6,7 +6,7 @@ interface AuthOverlayProps {
   onAuthSuccess: (user: {
     email: string;
     name: string;
-    role: "customer" | "merchant" | "rider";
+    role: "customer" | "merchant" | "rider" | "admin";
     locality?: string;
     brandName?: string;
   }) => void;
@@ -18,7 +18,7 @@ export default function AuthOverlay({ onAuthSuccess, onClose }: AuthOverlayProps
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"customer" | "merchant" | "rider">("customer");
+  const [role, setRole] = useState<"customer" | "merchant" | "rider" | "admin">("customer");
   
   // Role specific states
   const [locality, setLocality] = useState("Midtown");
@@ -189,11 +189,12 @@ export default function AuthOverlay({ onAuthSuccess, onClose }: AuthOverlayProps
             <div className="pt-2 space-y-3">
               <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block uppercase tracking-wider">Select User Category</label>
               
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { id: "customer", label: "Customer", icon: User, desc: "Aesthetic Shopper" },
                   { id: "merchant", label: "Merchant", icon: Store, desc: "Sovereign Brands" },
-                  { id: "rider", label: "Local Rider", icon: Truck, desc: "Active Courier" }
+                  { id: "rider", label: "Local Rider", icon: Truck, desc: "Active Courier" },
+                  { id: "admin", label: "Admin Node", icon: ShieldCheck, desc: "Observatory" }
                 ].map((cat) => {
                   const Icon = cat.icon;
                   const isSelected = role === cat.id;
